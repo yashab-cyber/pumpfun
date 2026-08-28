@@ -60,17 +60,17 @@ export class StrategyManager {
   public evaluateTradeTick(trade: TradeEvent): StrategyDecision {
     const now = Date.now();
     const window = this.tradeWindowMap.get(trade.mint) || { count: 0, firstSeen: now, buyVolumeSol: 0 };
+    const rawSol = (trade.solAmount && !isNaN(trade.solAmount) && trade.solAmount > 0) ? trade.solAmount : 0;
+    const sol = rawSol > 1e6 ? rawSol / 1e9 : rawSol;
 
     if (now - window.firstSeen < 30000) { // 30-second rolling window
       window.count++;
       if (trade.txType === 'buy') {
-        const sol = trade.solAmount > 1e6 ? trade.solAmount / 1e9 : trade.solAmount;
         window.buyVolumeSol += sol;
       }
     } else {
       window.count = 1;
       window.firstSeen = now;
-      const sol = trade.solAmount > 1e6 ? trade.solAmount / 1e9 : trade.solAmount;
       window.buyVolumeSol = trade.txType === 'buy' ? sol : 0;
     }
     this.tradeWindowMap.set(trade.mint, window);
