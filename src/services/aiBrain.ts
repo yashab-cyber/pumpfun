@@ -346,6 +346,8 @@ export class AIBrain {
       if (category === 'TECH_AI') defTp = 75;
       else if (category === 'VIRAL_MEME') defTp = 45;
 
+      const convictionTier = conf >= 85 ? 'SUPER_SNIPE' : conf >= 75 ? 'HIGH_CONVICTION' : conf >= 60 ? 'STANDARD' : 'SPECULATIVE';
+
       return {
         shouldBuy: Boolean(content.shouldBuy && conf >= 60),
         confidenceScore: conf,
@@ -355,7 +357,8 @@ export class AIBrain {
         riskFactors: Array.isArray(content.riskFactors) ? content.riskFactors : [],
         tags: Array.isArray(content.tags) ? content.tags : defaultTags,
         category: category,
-        providerUsed: providerName
+        providerUsed: providerName,
+        convictionTier
       };
     } catch {
       return {
@@ -367,7 +370,8 @@ export class AIBrain {
         riskFactors: ['JSON Parse Fallback'],
         tags: defaultTags,
         category: category,
-        providerUsed: providerName
+        providerUsed: providerName,
+        convictionTier: 'SPECULATIVE'
       };
     }
   }
