@@ -27,7 +27,7 @@ async function main() {
   ██╔═══╝ ██║   ██║██║╚██╔╝██║██╔═══╝ ██╔══╝  ██║   ██║██║╚██╗██║
   ██║     ╚██████╔╝██║ ╚═╝ ██║██║     ██║     ╚██████╔╝██║ ╚████║
   ╚═╝      ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚═╝      ╚═════╝ ╚═╝  ╚═══╝
-               AUTONOMOUS TRADING AGENT v1.0.0
+               QUANTUM AUTONOMOUS TRADING MATRIX v8.0
   `));
 
   const cliArgs = parseArgs();
@@ -47,6 +47,10 @@ async function main() {
 
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
+
+  process.on('unhandledRejection', (reason: any) => {
+    console.error(chalk.red(`[System Warning] Unhandled Promise Rejection: ${reason?.message || reason}`));
+  });
 
   try {
     await agent.start();

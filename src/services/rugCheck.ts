@@ -31,6 +31,14 @@ export class RugCheckService {
     devData.lastSeen = now;
     this.devHistoryMap.set(creatorPubkey, devData);
 
+    // Prune dev history map if larger than 2000 entries
+    if (this.devHistoryMap.size > 2000) {
+      const cutoff = now - 1800000;
+      for (const [k, v] of this.devHistoryMap.entries()) {
+        if (v.lastSeen < cutoff) this.devHistoryMap.delete(k);
+      }
+    }
+
     if (devData.count > 3) {
       risks.push(`Dev is spam creating tokens (${devData.count} launches recently)`);
       riskScore += 40;
@@ -42,11 +50,10 @@ export class RugCheckService {
       const largestAccounts = await this.connection.getTokenLargestAccounts(mintPubkey);
       
       if (largestAccounts && largestAccounts.value && largestAccounts.value.length > 0) {
-        // Exclude the largest account which is the pump.fun bonding curve pool
         const nonPoolHolders = largestAccounts.value.slice(1);
         let topHoldersSum = 0;
         for (const h of nonPoolHolders.slice(0, 5)) {
-          topHoldersSum += Number(h.amount);
+          topHoldersSum += Number(h.amount || 0);
         }
 
         const topHoldersRatio = topHoldersSum / 1e15; // 1B tokens with 6 decimals = 1e15 units
@@ -56,7 +63,7 @@ export class RugCheckService {
         }
       }
     } catch {
-      // If RPC rate limits, continue with standard checks
+      // Safe fallback on RPC timeout
     }
 
     const isSafe = riskScore < 50;
