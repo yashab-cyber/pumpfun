@@ -29,6 +29,8 @@ import { StealthRugDetector } from './services/stealthRugDetector';
 import { RpcFailoverManager } from './services/rpcFailover';
 import { SocialSentimentAnalyzer } from './services/socialSentiment';
 import { LossRecoveryManager } from './services/lossRecovery';
+import { SandwichGuard } from './services/sandwichGuard';
+import { ReinvestmentEngine } from './services/reinvestmentEngine';
 
 export class PumpFunAgent {
   private config: AgentConfig;
@@ -59,6 +61,8 @@ export class PumpFunAgent {
   private rpcFailover: RpcFailoverManager;
   private socialSentiment: SocialSentimentAnalyzer;
   private lossRecovery: LossRecoveryManager;
+  private sandwichGuard: SandwichGuard;
+  private reinvestmentEngine: ReinvestmentEngine;
 
   private isRunning: boolean = false;
   private monitorInterval: NodeJS.Timeout | null = null;
@@ -92,6 +96,8 @@ export class PumpFunAgent {
     this.stealthRugDetector = new StealthRugDetector();
     this.socialSentiment = new SocialSentimentAnalyzer();
     this.lossRecovery = new LossRecoveryManager();
+    this.sandwichGuard = new SandwichGuard();
+    this.reinvestmentEngine = new ReinvestmentEngine(config.solPerTrade, 0.05);
     this.webServer = new WebServer(this.journal);
     this.notificationService = new NotificationService();
     this.rugCheckService = new RugCheckService(this.solanaService);
@@ -110,7 +116,6 @@ export class PumpFunAgent {
       this.updateConfig.bind(this)
     );
 
-    // Register Telegram Interactive Bot Handlers
     this.telegramBot.registerHandlers({
       getStatus: async () => {
         const stats = this.config.tradingMode === 'live' ? await this.liveTrader!.getStats() : this.paperTrader!.getStats();
@@ -151,17 +156,13 @@ export class PumpFunAgent {
   public async start(): Promise<void> {
     this.isRunning = true;
     console.log(chalk.blue.bold('\n======================================================'));
-    console.log(chalk.green.bold(` 🚀 PUMP.FUN TRADING AGENT (QUANTUM PRO v8.0 ULTIMATE)`));
+    console.log(chalk.green.bold(` 🚀 PUMP.FUN TRADING AGENT (QUANTUM PRO v9.0 TITAN)`));
     console.log(chalk.blue.bold('======================================================\n'));
 
-    // 1. Initialize SQLite Memory & Profit Vault
     await this.sqliteMemory.init();
     await this.profitVault.init();
-
-    // 2. Start Web Dashboard
     await this.webServer.start();
 
-    // 3. Initialize Trader & Crash Recovery
     if (this.config.tradingMode === 'live' && this.liveTrader) {
       await this.liveTrader.init();
       if (!this.solanaService.getKeypair()) {
@@ -177,13 +178,11 @@ export class PumpFunAgent {
     console.log(chalk.yellow(`[Agent] Active Matrix Configuration:`));
     console.log(chalk.gray(`  • AI Model: ${this.config.aiProvider} (${this.config.aiModel})`));
     console.log(chalk.gray(`  • Multi-RPC Failover: Active (${this.rpcFailover.getActiveUrl()})`));
-    console.log(chalk.gray(`  • Social Virality Scraper: Active`));
-    console.log(chalk.gray(`  • Stealth Drain Detector: Active (Rolling 60s Net Flow Inspection)`));
-    console.log(chalk.gray(`  • Whale Tracker: ${this.whaleTracker.getTrackedWalletsCount()} Alpha Wallets Loaded`));
-    console.log(chalk.gray(`  • Telegram Controller: ${process.env.TELEGRAM_BOT_TOKEN ? 'Active (Polling Commands)' : 'Disabled'}`));
+    console.log(chalk.gray(`  • Sandwich Guard: Active (Auto-Tolerancing MEV Risk)`));
+    console.log(chalk.gray(`  • Stealth Drain Detector: Active`));
+    console.log(chalk.gray(`  • Telegram Bot: ${process.env.TELEGRAM_BOT_TOKEN ? 'Active (Polling Commands)' : 'Disabled'}`));
     console.log(chalk.gray(`  • Profit Vault: Base ${this.config.baseBankrollSol} SOL | Milestone Lock: +${this.config.profitVaultThresholdSol} SOL\n`));
 
-    // Connect to pump portal stream
     this.pumpPortal.connect(
       this.handleNewToken.bind(this),
       this.handleTokenTrade.bind(this)
@@ -220,17 +219,12 @@ export class PumpFunAgent {
     this.tokenSymbolMap.set(token.mint, token.symbol);
     this.webServer.broadcastNewToken(token);
 
-    // 1. Basic Filter Engine Check
     const filterResult = this.filterEngine.evaluateToken(token);
-    if (!filterResult.passed) {
-      return;
-    }
+    if (!filterResult.passed) return;
 
-    // 2. Autonomous Deep Research & Social Virality Sentiment
     const research = await this.researchEngine.conductResearch(token);
     const sentiment = this.socialSentiment.analyzeToken(token);
 
-    // 3. On-Chain RugCheck & Dev History Analysis
     const rugCheck = await this.rugCheckService.evaluateToken(token.mint, token.traderPublicKey);
     if (!rugCheck.isSafe) {
       console.log(chalk.yellow(`[RugCheck Rejected] ⚠️ ${token.symbol}: ${rugCheck.risks.join(', ')}`));
@@ -238,7 +232,6 @@ export class PumpFunAgent {
       return;
     }
 
-    // 4. AI Model Brain Evaluation
     const aiDecision = await this.aiBrain.evaluateOpportunity(
       token,
       research,
@@ -260,13 +253,10 @@ export class PumpFunAgent {
       return;
     }
 
-    // 5. Strategy Check
     const stratDecision = this.strategyManager.evaluateNewToken(token, aiDecision.confidenceScore);
-    if (!stratDecision.shouldBuy) {
-      return;
-    }
+    if (!stratDecision.shouldBuy) return;
 
-    // 6. Dynamic Kelly Position Sizing with Loss Recovery Multiplier
+    // Dynamic Sizing with Sandwich Guard & Reinvestment Engine
     const currentBal = this.config.tradingMode === 'live' ? await this.solanaService.getBalance() : (this.paperTrader?.getBalance() || 1.0);
     const recoveryMultiplier = this.lossRecovery.getRecoveryMultiplier(aiDecision.confidenceScore);
     const baseDynamicSizeSol = this.positionSizer.calculateTradeSize(
@@ -275,10 +265,17 @@ export class PumpFunAgent {
       rugCheck.score,
       currentBal
     );
-    const dynamicSizeSol = Number((baseDynamicSizeSol * recoveryMultiplier).toFixed(4));
-    this.config.solPerTrade = dynamicSizeSol;
 
-    // 7. Dynamic Gas Optimization
+    const stats = this.config.tradingMode === 'live' ? await this.liveTrader!.getStats() : this.paperTrader!.getStats();
+    const compoundedSizeSol = this.reinvestmentEngine.calculateCompoundedTradeSize(stats.realizedPnlSol, currentBal);
+    const finalSizeSol = Number((Math.max(baseDynamicSizeSol, compoundedSizeSol) * recoveryMultiplier).toFixed(4));
+    this.config.solPerTrade = finalSizeSol;
+
+    const sandwich = this.sandwichGuard.evaluateSandwichRisk(finalSizeSol, token.vSolInBondingCurve || 30000000000);
+    if (sandwich.isHighRisk) {
+      this.config.slippagePercent = sandwich.maxSafeSlippagePct;
+    }
+
     if (this.config.tradingMode === 'live') {
       const optimalFee = await this.gasOptimizer.getOptimalPriorityFee();
       this.config.priorityFeeLamports = optimalFee;
@@ -288,9 +285,9 @@ export class PumpFunAgent {
     console.log(
       chalk.magenta(
         `\n[Research & AI Approved] 🔬 [${research.category}] ${token.symbol} (${token.name})\n` +
-        `  • Dynamic Sizing: ${dynamicSizeSol.toFixed(4)} SOL (Kelly & Virality Adjusted)\n` +
+        `  • Dynamic Sizing: ${finalSizeSol.toFixed(4)} SOL (Kelly & Reinvestment Adjusted)\n` +
         `  • Virality Tier: ${sentiment.sentimentTier} (${sentiment.viralityScore}/100)\n` +
-        `  • AI Confidence: ${aiDecision.confidenceScore}% | Score: ${research.researchScore}/100\n` +
+        `  • AI Confidence: ${aiDecision.confidenceScore}% (${aiDecision.convictionTier || 'STANDARD'})\n` +
         `  • AI Reasoning: "${aiDecision.reasoning}"\n` +
         `  • Mint: ${token.mint}`
       )
@@ -318,9 +315,9 @@ export class PumpFunAgent {
     if (position) {
       position.category = research.category;
       position.researchScore = research.researchScore;
-      this.webServer.broadcastLog(`[AI Brain] Bought [${research.category}] ${position.symbol} (${dynamicSizeSol.toFixed(3)} SOL, ${aiDecision.confidenceScore}% conf)`);
+      this.webServer.broadcastLog(`[AI Brain] Bought [${research.category}] ${position.symbol} (${finalSizeSol.toFixed(3)} SOL, ${aiDecision.confidenceScore}% conf)`);
       await this.notificationService.notifyBuy(position, this.config.tradingMode);
-      await this.telegramBot.notifyBuy(position, dynamicSizeSol);
+      await this.telegramBot.notifyBuy(position, finalSizeSol);
       await this.syncAndRenderDashboard();
     }
   }
@@ -328,13 +325,11 @@ export class PumpFunAgent {
   private async handleTokenTrade(trade: TradeEvent): Promise<void> {
     const symbol = this.tokenSymbolMap.get(trade.mint) || 'UNKNOWN';
 
-    // 1. Sybil Bundle Cluster Detection
     const clusterReport = this.clusterDetector.trackEarlyTrade(trade);
     if (clusterReport && clusterReport.isBundled) {
       this.webServer.broadcastLog(`⚠️ Sybil Bundle Trap Rejected: ${trade.mint.substring(0,6)} (${clusterReport.warnings.join(', ')})`);
     }
 
-    // 2. Stealth Liquidity Drain Detection
     const stealthDrain = this.stealthRugDetector.trackTrade(trade);
     if (stealthDrain && stealthDrain.isDraining) {
       const position = this.config.tradingMode === 'live'
@@ -342,7 +337,7 @@ export class PumpFunAgent {
         : this.paperTrader?.getPosition(trade.mint);
 
       if (position && position.status === 'OPEN') {
-        this.webServer.broadcastLog(`🚨 Stealth Drain Detected on ${position.symbol}! Executing immediate defensive exit.`);
+        this.webServer.broadcastLog(`🚨 Stealth Drain Detected on ${position.symbol}! Executing defensive exit.`);
         const exitSignal: ExitSignal = {
           action: 'SELL',
           mint: position.mint,
@@ -355,14 +350,12 @@ export class PumpFunAgent {
       }
     }
 
-    // 3. Whale & Insider Tracking Radar
     const whaleAlert = this.whaleTracker.evaluateTrade(trade, symbol);
     if (whaleAlert) {
       this.webServer.broadcastLog(`🐋 Whale Alert: ${whaleAlert.label} ${whaleAlert.action} ${whaleAlert.solAmount.toFixed(2)} SOL on ${whaleAlert.mint}`);
       this.telegramBot.notifyWhaleAlert(whaleAlert.label, whaleAlert.action, whaleAlert.solAmount, whaleAlert.mint);
     }
 
-    // 4. Migration Velocity Tracking
     if (trade.vSolInBondingCurve) {
       const pred = this.migrationPredictor.trackTick(trade.mint, symbol, trade.vSolInBondingCurve);
       this.latestPredictions.set(trade.mint, pred);
@@ -371,7 +364,6 @@ export class PumpFunAgent {
       }
     }
 
-    // 5. Copy Trader check
     if (this.copyTrader.shouldCopy(trade)) {
       this.webServer.broadcastLog(`Copy-trade triggered for alpha wallet on ${trade.mint}`);
       const mockToken: TokenCreationEvent = {
@@ -388,7 +380,6 @@ export class PumpFunAgent {
       await this.handleNewToken(mockToken);
     }
 
-    // 6. Momentum / Migration strategy check
     const stratDecision = this.strategyManager.evaluateTradeTick(trade);
     if (stratDecision.shouldBuy) {
       const mockToken: TokenCreationEvent = {
@@ -409,7 +400,6 @@ export class PumpFunAgent {
       await this.handleNewToken(mockToken);
     }
 
-    // 7. Position tracking & price updates
     const position = this.config.tradingMode === 'live'
       ? this.liveTrader?.getPosition(trade.mint)
       : this.paperTrader?.getPosition(trade.mint);
@@ -550,7 +540,7 @@ export class PumpFunAgent {
 
     const pnlColor = stats.realizedPnlSol >= 0 ? chalk.green : chalk.red;
 
-    console.log(chalk.gray('\n---------------- [QUANTUM MATRIX v8.0 DASHBOARD] ----------------'));
+    console.log(chalk.gray('\n---------------- [QUANTUM MATRIX v9.0 DASHBOARD] ----------------'));
     console.log(
       `Mode: ${chalk.bold.yellow(this.config.tradingMode.toUpperCase())} | ` +
       `Strategy: ${chalk.bold.cyan(this.strategyCoordinator.getActiveStrategy())} | ` +
@@ -580,7 +570,7 @@ export class PumpFunAgent {
       }
       console.log(table.toString());
     } else {
-      console.log(chalk.gray('  (Quantum Matrix monitoring Bonding Curves, Telegram Bot & Virality...)'));
+      console.log(chalk.gray('  (Quantum Matrix monitoring Bonding Curves, Telegram Bot & Sandwich Guard...)'));
     }
     console.log(chalk.gray('-------------------------------------------------------------------\n'));
   }

@@ -1,6 +1,6 @@
-# 🚀 Pump.fun Autonomous Trading Agent (QUANTUM PRO v7.5)
+# 🚀 Pump.fun Autonomous Trading Agent (QUANTUM PRO v9.0 TITAN)
 
-An institutional-grade, AI-driven autonomous trading agent for **Pump.fun** on the Solana blockchain. Engineered with **Raydium Graduation & Jupiter Auto-Router**, **Social Virality Scraper**, **Loss Recovery Sizer**, **Stealth Liquidity Drain Detection**, **Multi-RPC Latency Racing**, **Sybil Cluster Detection**, **Jito MEV Frontrunning Protection**, **Historical Strategy Backtester**, **Dynamic Breakeven Trailing Stop Ladder**, **Raydium Migration & KOTH Velocity Predictor**, **Autonomous Strategy Regime Coordinator**, **Insider Whale Tracking Radar**, **Kelly Dynamic Sizer**, **AI CoT Inspector**, **Synthesized Audio Chimes**, **Automated Profit Vault**, and multi-model AI reasoning (**Copilot `http://localhost:4141`**, **Anthropic**, **Gemini**, **Ollama**, **OpenAI**).
+An institutional-grade, AI-driven autonomous trading agent for **Pump.fun** on the Solana blockchain. Engineered with **MEV Sandwich Guard & Price Impact Protection**, **Session Reinvestment Compounding Engine**, **Interactive Long-Polling Telegram Controller**, **Raydium Graduation & Jupiter Auto-Router**, **Social Virality Scraper**, **Loss Recovery Sizer**, **Stealth Liquidity Drain Detection**, **Multi-RPC Latency Racing**, **Sybil Cluster Detection**, **Jito MEV Frontrunning Protection**, **Historical Strategy Backtester**, **Dynamic Breakeven Trailing Stop Ladder**, **Raydium Migration & KOTH Velocity Predictor**, **Autonomous Strategy Regime Coordinator**, **Insider Whale Tracking Radar**, **Kelly Dynamic Sizer**, **AI CoT Inspector**, **Synthesized Audio Chimes**, **Automated Profit Vault**, and multi-model AI reasoning (**Copilot `http://localhost:4141`**, **Anthropic**, **Gemini**, **Ollama**, **OpenAI**).
 
 ---
 
@@ -16,6 +16,7 @@ An institutional-grade, AI-driven autonomous trading agent for **Pump.fun** on t
 For in-depth guides, credential walkthroughs, and technical specifications, refer to [`docs/`](file:///root/pumpfun/docs):
 
 - 🔑 [**Step-by-Step Environment & Credentials Guide**](file:///root/pumpfun/docs/ENV_SETUP.md): Where and how to get RPC URLs, Solana private keys, Copilot/Claude/Gemini API keys, and Telegram credentials.
+- 🥪 [**MEV Sandwich Guard**](file:///root/pumpfun/docs/SANDWICH_GUARD.md): Pre-execution price impact modeling and anti-sandwich slippage clamping.
 - 🪐 [**Raydium & Jupiter Auto-Router**](file:///root/pumpfun/docs/RAYDIUM_ROUTER.md): Seamless post-graduation Raydium pool execution and swap routing.
 - 🌐 [**Social Sentiment & Virality Scraper**](file:///root/pumpfun/docs/SOCIAL_VIRALITY.md): Cultural momentum, ticker meta relevance, and virality scoring.
 - 🚨 [**Stealth Liquidity Drain Detector**](file:///root/pumpfun/docs/STEALTH_RUG_DETECTOR.md): Net volume flow tracking to detect disguised developer ladder dumps.
@@ -34,6 +35,9 @@ For in-depth guides, credential walkthroughs, and technical specifications, refe
 
 | Feature | Description | File Reference |
 |---|---|---|
+| **Sandwich Guard** | Calculates price impact to prevent MEV searcher frontrunning | [`sandwichGuard.ts`](file:///root/pumpfun/src/services/sandwichGuard.ts) |
+| **Reinvestment Engine**| Dynamically compounds 5% of session profits into trade sizes | [`reinvestmentEngine.ts`](file:///root/pumpfun/src/services/reinvestmentEngine.ts) |
+| **Telegram Controller**| Long-polling phone remote for `/status`, `/positions`, `/vault`, `/panic` | [`telegramBot.ts`](file:///root/pumpfun/src/services/telegramBot.ts) |
 | **Raydium Auto-Router** | Executes post-graduation swaps and exits seamlessly on Raydium/Jupiter | [`raydiumRouter.ts`](file:///root/pumpfun/src/services/raydiumRouter.ts) |
 | **Social Virality Scraper** | Scores cultural meta relevance and verified community channels | [`socialSentiment.ts`](file:///root/pumpfun/src/services/socialSentiment.ts) |
 | **Loss Recovery Manager** | Applies controlled 1.25x sizing on high-confidence setups after drawdowns | [`lossRecovery.ts`](file:///root/pumpfun/src/services/lossRecovery.ts) |
