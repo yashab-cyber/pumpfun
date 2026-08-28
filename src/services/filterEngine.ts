@@ -14,12 +14,23 @@ export class FilterEngine {
   }
 
   public evaluateToken(token: TokenCreationEvent): FilterResult {
-    // 1. Check mint length and basic validity
+    // 1. Check mint address length and validity
     if (!token.mint || token.mint.length < 32 || token.mint.length > 44) {
       return { passed: false, reason: 'Invalid mint address' };
     }
 
-    // 2. Blacklist check on name and symbol
+    // 2. Validate symbol and name length
+    const symbol = (token.symbol || '').trim();
+    if (symbol.length < 2 || symbol.length > 12) {
+      return { passed: false, reason: `Invalid symbol length (${symbol.length})` };
+    }
+
+    // 3. Reject unpronounceable gibberish consonant strings (e.g. "XDFRTHQW")
+    if (symbol.length >= 6 && !/[aeiouy0-9]/i.test(symbol)) {
+      return { passed: false, reason: 'Unpronounceable spam ticker pattern detected' };
+    }
+
+    // 4. Blacklist check on name and symbol
     const textToCheck = `${token.name} ${token.symbol}`.toLowerCase();
     for (const badWord of this.config.blacklistedWords) {
       if (textToCheck.includes(badWord)) {
@@ -27,8 +38,7 @@ export class FilterEngine {
       }
     }
 
-    // 3. Dev Initial Buy Filter
-    // In pump.fun, initialBuy is in SOL (or lamports converted to SOL)
+    // 5. Dev Initial Buy Filter
     const initialBuySol = token.initialBuy > 1000000 ? token.initialBuy / 1e9 : token.initialBuy;
 
     if (initialBuySol < this.config.minDevInitialBuySol) {
@@ -45,7 +55,7 @@ export class FilterEngine {
       };
     }
 
-    // 4. Social Links Check
+    // 6. Social Links Check
     if (this.config.requireSocials) {
       const hasTwitter = Boolean(token.twitter && token.twitter.trim().length > 0);
       const hasTelegram = Boolean(token.telegram && token.telegram.trim().length > 0);

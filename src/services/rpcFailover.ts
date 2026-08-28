@@ -4,8 +4,10 @@ import chalk from 'chalk';
 export interface RpcNode {
   url: string;
   latencyMs: number;
+  emaLatencyMs: number;
   isHealthy: boolean;
   errorCount: number;
+  connection: Connection;
 }
 
 export class RpcFailoverManager {
@@ -20,8 +22,10 @@ export class RpcFailoverManager {
     this.nodes = unique.map(url => ({
       url,
       latencyMs: 999,
+      emaLatencyMs: 999,
       isHealthy: true,
-      errorCount: 0
+      errorCount: 0,
+      connection: new Connection(url, 'confirmed')
     }));
 
     this.startHealthCheck();
@@ -29,7 +33,7 @@ export class RpcFailoverManager {
 
   public getActiveConnection(): Connection {
     const activeNode = this.nodes[this.activeIndex] || this.nodes[0];
-    return new Connection(activeNode.url, 'confirmed');
+    return activeNode.connection;
   }
 
   public getActiveUrl(): string {
@@ -61,11 +65,18 @@ export class RpcFailoverManager {
   private async checkNode(node: RpcNode): Promise<void> {
     const start = Date.now();
     try {
-      const conn = new Connection(node.url, 'confirmed');
-      await conn.getSlot();
-      node.latencyMs = Date.now() - start;
+      await node.connection.getSlot();
+      const instantLatency = Date.now() - start;
+      node.latencyMs = instantLatency;
+      node.emaLatencyMs = Number((instantLatency * 0.4 + node.emaLatencyMs * 0.6).toFixed(0));
+
+      const wasUnhealthy = !node.isHealthy;
       node.isHealthy = true;
       node.errorCount = 0;
+
+      if (wasUnhealthy) {
+        console.log(chalk.green(`[RPC Failover] 🟢 RPC Node Recovered: ${node.url} (${node.emaLatencyMs}ms)`));
+      }
     } catch {
       node.latencyMs = 9999;
       node.errorCount++;
@@ -78,7 +89,7 @@ export class RpcFailoverManager {
     const healthyNodes = this.nodes
       .map((n, idx) => ({ ...n, idx }))
       .filter(n => n.isHealthy)
-      .sort((a, b) => a.latencyMs - b.latencyMs);
+      .sort((a, b) => a.emaLatencyMs - b.emaLatencyMs);
 
     if (healthyNodes.length > 0 && healthyNodes[0].idx !== this.activeIndex) {
       this.activeIndex = healthyNodes[0].idx;
@@ -89,7 +100,7 @@ export class RpcFailoverManager {
     this.raceFastestNode();
     this.checkInterval = setInterval(() => {
       this.raceFastestNode();
-    }, 30000);
+    }, 25000);
   }
 
   public stop(): void {
