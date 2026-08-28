@@ -109,12 +109,49 @@ export class PumpFunAgent {
       this.changeStrategy.bind(this),
       this.updateConfig.bind(this)
     );
+
+    // Register Telegram Interactive Bot Handlers
+    this.telegramBot.registerHandlers({
+      getStatus: async () => {
+        const stats = this.config.tradingMode === 'live' ? await this.liveTrader!.getStats() : this.paperTrader!.getStats();
+        return (
+          `📊 <b>PUMP.FUN AGENT STATUS</b>\n\n` +
+          `• <b>Mode:</b> <code>${this.config.tradingMode.toUpperCase()}</code>\n` +
+          `• <b>Active Strategy:</b> <b>${this.strategyCoordinator.getActiveStrategy()}</b>\n` +
+          `• <b>Bankroll:</b> ${stats.currentBalanceSol.toFixed(4)} SOL\n` +
+          `• <b>Safe Vault:</b> 🔒 ${this.profitVault.getTotalVaulted().toFixed(4)} SOL (Cycle #${this.profitVault.getCycleCount()})\n` +
+          `• <b>Realized PnL:</b> ${stats.realizedPnlSol >= 0 ? '+' : ''}${stats.realizedPnlSol.toFixed(4)} SOL\n` +
+          `• <b>Win Rate:</b> ${stats.winRate.toFixed(1)}% (${stats.winningTrades}W / ${stats.losingTrades}L)\n` +
+          `• <b>Scanned / Passed:</b> ${this.processedTokensCount} / ${this.passedTokensCount}`
+        );
+      },
+      getPositions: async () => {
+        return this.config.tradingMode === 'live'
+          ? (this.liveTrader?.getOpenPositions() || [])
+          : (this.paperTrader?.getOpenPositions() || []);
+      },
+      panicSellAll: async () => {
+        await this.panicSellAll();
+      },
+      sellSinglePosition: async (mint: string) => {
+        await this.sellSinglePosition(mint);
+      },
+      changeStrategy: (strategy: StrategyType) => {
+        this.changeStrategy(strategy);
+      },
+      getVaultSummary: async () => {
+        return {
+          totalVaulted: this.profitVault.getTotalVaulted(),
+          cycles: this.profitVault.getCycleCount()
+        };
+      }
+    });
   }
 
   public async start(): Promise<void> {
     this.isRunning = true;
     console.log(chalk.blue.bold('\n======================================================'));
-    console.log(chalk.green.bold(` 🚀 PUMP.FUN TRADING AGENT (QUANTUM PRO v7.0 ULTIMATE)`));
+    console.log(chalk.green.bold(` 🚀 PUMP.FUN TRADING AGENT (QUANTUM PRO v8.0 ULTIMATE)`));
     console.log(chalk.blue.bold('======================================================\n'));
 
     // 1. Initialize SQLite Memory & Profit Vault
@@ -143,7 +180,7 @@ export class PumpFunAgent {
     console.log(chalk.gray(`  • Social Virality Scraper: Active`));
     console.log(chalk.gray(`  • Stealth Drain Detector: Active (Rolling 60s Net Flow Inspection)`));
     console.log(chalk.gray(`  • Whale Tracker: ${this.whaleTracker.getTrackedWalletsCount()} Alpha Wallets Loaded`));
-    console.log(chalk.gray(`  • Cluster Detector: Active (Detecting Sybil Bundle Traps)`));
+    console.log(chalk.gray(`  • Telegram Controller: ${process.env.TELEGRAM_BOT_TOKEN ? 'Active (Polling Commands)' : 'Disabled'}`));
     console.log(chalk.gray(`  • Profit Vault: Base ${this.config.baseBankrollSol} SOL | Milestone Lock: +${this.config.profitVaultThresholdSol} SOL\n`));
 
     // Connect to pump portal stream
@@ -322,6 +359,7 @@ export class PumpFunAgent {
     const whaleAlert = this.whaleTracker.evaluateTrade(trade, symbol);
     if (whaleAlert) {
       this.webServer.broadcastLog(`🐋 Whale Alert: ${whaleAlert.label} ${whaleAlert.action} ${whaleAlert.solAmount.toFixed(2)} SOL on ${whaleAlert.mint}`);
+      this.telegramBot.notifyWhaleAlert(whaleAlert.label, whaleAlert.action, whaleAlert.solAmount, whaleAlert.mint);
     }
 
     // 4. Migration Velocity Tracking
@@ -429,6 +467,7 @@ export class PumpFunAgent {
 
     this.webServer.broadcastLog(`Exited ${position.symbol} (${exitSignal.reason}) PnL: ${exitSignal.pnlPercent.toFixed(2)}%`);
     await this.notificationService.notifySell(position, exitSignal, this.config.tradingMode);
+    await this.telegramBot.notifySell(position, exitSignal, this.config.tradingMode);
     await this.syncAndRenderDashboard();
   }
 
@@ -511,7 +550,7 @@ export class PumpFunAgent {
 
     const pnlColor = stats.realizedPnlSol >= 0 ? chalk.green : chalk.red;
 
-    console.log(chalk.gray('\n---------------- [QUANTUM MATRIX v7.0 DASHBOARD] ----------------'));
+    console.log(chalk.gray('\n---------------- [QUANTUM MATRIX v8.0 DASHBOARD] ----------------'));
     console.log(
       `Mode: ${chalk.bold.yellow(this.config.tradingMode.toUpperCase())} | ` +
       `Strategy: ${chalk.bold.cyan(this.strategyCoordinator.getActiveStrategy())} | ` +
@@ -541,7 +580,7 @@ export class PumpFunAgent {
       }
       console.log(table.toString());
     } else {
-      console.log(chalk.gray('  (Quantum Matrix monitoring Bonding Curves, Whale Alpha & Virality...)'));
+      console.log(chalk.gray('  (Quantum Matrix monitoring Bonding Curves, Telegram Bot & Virality...)'));
     }
     console.log(chalk.gray('-------------------------------------------------------------------\n'));
   }
@@ -550,6 +589,7 @@ export class PumpFunAgent {
     this.isRunning = false;
     if (this.monitorInterval) clearInterval(this.monitorInterval);
     if (this.dashboardInterval) clearInterval(this.dashboardInterval);
+    this.telegramBot.stop();
     this.rpcFailover.stop();
     this.pumpPortal.disconnect();
     this.webServer.stop();
