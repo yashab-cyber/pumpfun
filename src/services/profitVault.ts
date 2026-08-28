@@ -13,6 +13,17 @@ export interface VaultEventResult {
   txSignature?: string;
 }
 
+export interface VaultProgress {
+  progressPercent: number;
+  currentBalanceSol: number;
+  baseBankrollSol: number;
+  milestoneThresholdSol: number;
+  milestoneTargetSol: number;
+  solRemainingToVault: number;
+  totalVaultedSol: number;
+  cycleCount: number;
+}
+
 export class ProfitVault {
   private config: AgentConfig;
   private memory: SQLiteMemory;
@@ -47,9 +58,26 @@ export class ProfitVault {
     return this.cycleCount;
   }
 
-  /**
-   * Evaluates if current active balance has crossed the profit milestone
-   */
+  public getMilestoneProgress(currentBalanceSol: number): VaultProgress {
+    const base = Number(this.config.baseBankrollSol) || 0.01;
+    const threshold = Number(this.config.profitVaultThresholdSol) || 0.50;
+    const target = base + threshold;
+    const gainInCycle = Math.max(0, currentBalanceSol - base);
+    const progress = Math.min(100, Math.max(0, (gainInCycle / threshold) * 100));
+    const solRemaining = Math.max(0, target - currentBalanceSol);
+
+    return {
+      progressPercent: Number(progress.toFixed(1)),
+      currentBalanceSol: Number(currentBalanceSol.toFixed(4)),
+      baseBankrollSol: base,
+      milestoneThresholdSol: threshold,
+      milestoneTargetSol: Number(target.toFixed(4)),
+      solRemainingToVault: Number(solRemaining.toFixed(4)),
+      totalVaultedSol: Number(this.totalVaultedSol.toFixed(4)),
+      cycleCount: this.cycleCount
+    };
+  }
+
   public async checkAndVaultProfits(currentBalanceSol: number): Promise<VaultEventResult> {
     if (!this.config.enableProfitVault || currentBalanceSol <= 0 || isNaN(currentBalanceSol)) {
       return { triggered: false, amountVaultedSol: 0, totalVaultedSol: this.totalVaultedSol, cycleNumber: this.cycleCount, newTradingBalanceSol: currentBalanceSol };
@@ -99,12 +127,12 @@ export class ProfitVault {
 
       console.log(
         chalk.yellow.bold(
-          `\n========================================================================\n` +
-          ` 🏦 [PROFIT VAULT MILESTONE REACHED] Cycle #${this.cycleCount} COMPLETED!\n` +
-          `   • Locked into Vault: +${amountToVault.toFixed(4)} SOL (~$100 safe profit secured)\n` +
-          `   • Total Cumulative Vaulted: ${this.totalVaultedSol.toFixed(4)} SOL\n` +
-          `   • Trading Bankroll Reset To: ${this.config.baseBankrollSol.toFixed(4)} SOL ($1 starting seed)\n` +
-          `========================================================================\n`
+          `\n======================================================\n` +
+          `🏦 [PROFIT VAULT TRIGGERED - MILESTONE CYCLE #${this.cycleCount}]\n` +
+          `  • Locked to Safe Vault: +${amountToVault.toFixed(4)} SOL (~$100.00)\n` +
+          `  • Cumulative Vaulted: ${this.totalVaultedSol.toFixed(4)} SOL\n` +
+          `  • Active Trading Bankroll Reset to Seed: ${this.config.baseBankrollSol} SOL\n` +
+          `======================================================\n`
         )
       );
 

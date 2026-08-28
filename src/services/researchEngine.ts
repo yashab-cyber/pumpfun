@@ -22,6 +22,12 @@ export interface ResearchReport {
 }
 
 export class ResearchEngine {
+  private static readonly IPFS_GATEWAYS = [
+    'https://ipfs.io/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://gateway.pinata.cloud/ipfs/'
+  ];
+
   private static readonly TECH_KEYWORDS = [
     'ai', 'agent', 'bot', 'llm', 'neural', 'compute', 'depin', 'autonomous',
     'python', 'api', 'framework', 'model', 'swarm', 'code', 'tech', 'robot',
@@ -32,7 +38,7 @@ export class ResearchEngine {
   private static readonly MEME_KEYWORDS = [
     'pepe', 'doge', 'cat', 'wojak', 'chad', 'giga', 'based', 'moon', 'cult',
     'shib', 'inu', 'bonk', 'wif', 'popcat', 'goat', 'fart', 'brainrot',
-    'pnut', 'chill', 'moodeng', 'retard', 'kermit', 'frog', 'smudge'
+    'pnut', 'chill', 'moodeng', 'kermit', 'frog', 'smudge'
   ];
 
   private static readonly POLITICAL_KEYWORDS = [
@@ -56,27 +62,29 @@ export class ResearchEngine {
   };
 
   /**
-   * Deep research on a token: analyzes metadata URI, categorizes narrative, checks tech docs/socials
+   * Deep research on a token: analyzes metadata URI with multi-gateway racing, categorizes narrative, checks tech docs/socials
    */
   public async conductResearch(token: TokenCreationEvent): Promise<ResearchReport> {
     let metaDescription = '';
     let hasGithubOrDocs = false;
 
-    // 1. Fetch IPFS / Arweave Metadata if available
+    // 1. Fetch IPFS / Arweave Metadata with Multi-Gateway Racing
     if (token.uri && (token.uri.startsWith('http') || token.uri.startsWith('ipfs://'))) {
-      try {
-        const httpUrl = token.uri.startsWith('ipfs://')
-          ? `https://ipfs.io/ipfs/${token.uri.replace('ipfs://', '')}`
-          : token.uri;
+      const cid = token.uri.replace('ipfs://', '').replace(/https?:\/\/[^\/]+\/ipfs\//, '');
+      
+      const fetchPromises = ResearchEngine.IPFS_GATEWAYS.map(gateway =>
+        axios.get(`${gateway}${cid}`, { timeout: 2500 })
+      );
 
-        const res = await axios.get(httpUrl, { timeout: 3000 });
+      try {
+        const res = await Promise.any(fetchPromises);
         if (res.data) {
           metaDescription = res.data.description || '';
           const fullText = JSON.stringify(res.data).toLowerCase();
           hasGithubOrDocs = fullText.includes('github.com') || fullText.includes('gitbook.io') || fullText.includes('docs.') || fullText.includes('whitepaper');
         }
       } catch {
-        // Fallback gracefully if IPFS gateway is slow
+        // Fallback gracefully if all gateways fail/timeout
       }
     }
 
@@ -89,7 +97,6 @@ export class ResearchEngine {
     // 3. Score Token Research Metrics
     let score = 40; // baseline
 
-    // Social & Tech Documentation checks
     const hasTwitter = Boolean(token.twitter && token.twitter.length > 3);
     const hasTelegram = Boolean(token.telegram && token.telegram.length > 3);
     const hasWebsite = Boolean(token.website && token.website.length > 3);
@@ -97,95 +104,99 @@ export class ResearchEngine {
     if (hasWebsite) { score += 15; tags.push('Website'); }
     if (hasTwitter) { score += 10; tags.push('Twitter/X'); }
     if (hasTelegram) { score += 10; tags.push('Telegram'); }
-    if (hasGithubOrDocs) { score += 20; tags.push('Tech Docs/GitHub'); }
+    if (hasGithubOrDocs) { score += 25; tags.push('Tech Docs/GitHub'); }
 
-    // Dev Initial Buy Quality
-    const devBuy = token.initialBuy > 1e6 ? token.initialBuy / 1e9 : token.initialBuy;
-    if (devBuy >= 0.2 && devBuy <= 2.5) {
-      score += 15; // Optimal skin-in-the-game
-      tags.push('Optimal Dev Buy');
+    // Dev Initial Buy skin-in-the-game bonus
+    const devBuySol = token.initialBuy > 1e6 ? token.initialBuy / 1e9 : token.initialBuy;
+    if (devBuySol >= 0.5 && devBuySol <= 2.5) {
+      score += 15;
+      tags.push('Skin-in-the-game');
+    } else if (devBuySol > 5.0) {
+      score -= 20;
+      tags.push('High Dev Concentration');
     }
 
-    // Category Specific Bonuses
-    if (category === 'TECH_AI') {
-      score += 10; // Tech/AI narrative premium
-      tags.push('AI Agent Meta');
-    } else if (category === 'VIRAL_MEME') {
-      score += 5;
-      tags.push('Viral Meme Meta');
+    // Historical sector performance multiplier
+    const sector = this.sectorStats[category];
+    let categoryMomentumScore = 50;
+    if (sector && sector.totalEvaluated >= 3) {
+      const winRate = (sector.totalWins / sector.totalEvaluated) * 100;
+      categoryMomentumScore = winRate;
+      if (winRate >= 70) score += 10;
+      else if (winRate < 40) score -= 10;
     }
 
     const finalScore = Math.min(100, Math.max(0, score));
 
     let verdict: 'STRONG_BUY' | 'SPECULATIVE_BUY' | 'NEUTRAL' | 'AVOID' = 'NEUTRAL';
-    if (finalScore >= 75) verdict = 'STRONG_BUY';
-    else if (finalScore >= 55) verdict = 'SPECULATIVE_BUY';
-    else if (finalScore < 35) verdict = 'AVOID';
+    if (finalScore >= 80) verdict = 'STRONG_BUY';
+    else if (finalScore >= 65) verdict = 'SPECULATIVE_BUY';
+    else if (finalScore < 45) verdict = 'AVOID';
 
-    const report: ResearchReport = {
+    return {
       mint: token.mint,
       symbol: token.symbol,
       name: token.name,
       category,
       researchScore: finalScore,
-      summary: `${category} narrative scored ${finalScore}/100. ${tags.join(', ')}.`,
+      summary: `[${category}] Research score: ${finalScore}/100. Docs: ${hasGithubOrDocs}, Socials: ${hasTwitter || hasTelegram}.`,
       narrativeTags: tags,
       hasWebsite,
       hasTwitter,
       hasTelegram,
       hasGithubOrDocs,
-      metaDescription: metaDescription.substring(0, 150),
-      categoryMomentumScore: this.getCategoryMomentum(category),
+      metaDescription,
+      categoryMomentumScore,
       verdict
     };
-
-    this.sectorStats[category].totalEvaluated++;
-    return report;
   }
 
   private classifyCategory(text: string): TokenCategory {
-    let techHits = 0;
-    let memeHits = 0;
-    let politicalHits = 0;
-    let gamingHits = 0;
+    let techCount = 0;
+    let memeCount = 0;
+    let poliCount = 0;
+    let gameCount = 0;
 
-    for (const k of ResearchEngine.TECH_KEYWORDS) { if (text.includes(k)) techHits++; }
-    for (const k of ResearchEngine.MEME_KEYWORDS) { if (text.includes(k)) memeHits++; }
-    for (const k of ResearchEngine.POLITICAL_KEYWORDS) { if (text.includes(k)) politicalHits++; }
-    for (const k of ResearchEngine.GAMING_KEYWORDS) { if (text.includes(k)) gamingHits++; }
+    for (const kw of ResearchEngine.TECH_KEYWORDS) {
+      if (text.includes(kw)) techCount++;
+    }
+    for (const kw of ResearchEngine.MEME_KEYWORDS) {
+      if (text.includes(kw)) memeCount++;
+    }
+    for (const kw of ResearchEngine.POLITICAL_KEYWORDS) {
+      if (text.includes(kw)) poliCount++;
+    }
+    for (const kw of ResearchEngine.GAMING_KEYWORDS) {
+      if (text.includes(kw)) gameCount++;
+    }
 
-    if (techHits >= 1 && techHits >= memeHits && techHits >= politicalHits) return 'TECH_AI';
-    if (politicalHits >= 1 && politicalHits >= memeHits) return 'POLITICAL';
-    if (gamingHits >= 1 && gamingHits >= memeHits) return 'GAMING';
-    if (memeHits >= 1) return 'VIRAL_MEME';
+    if (techCount >= 2 || (techCount > memeCount && techCount > poliCount)) return 'TECH_AI';
+    if (poliCount >= 2) return 'POLITICAL';
+    if (gameCount >= 2) return 'GAMING';
+    if (memeCount >= 1) return 'VIRAL_MEME';
 
-    return text.includes('app') || text.includes('tool') || text.includes('swap') ? 'UTILITY' : 'VIRAL_MEME';
+    return 'TECH_AI'; // Default meta
   }
 
   public recordSectorOutcome(category: TokenCategory, isWin: boolean, pnlSol: number): void {
-    if (this.sectorStats[category]) {
-      if (isWin) this.sectorStats[category].totalWins++;
-      this.sectorStats[category].totalPnlSol += pnlSol;
+    if (!this.sectorStats[category]) {
+      this.sectorStats[category] = { totalEvaluated: 0, totalWins: 0, totalPnlSol: 0 };
     }
+    this.sectorStats[category].totalEvaluated++;
+    if (isWin) this.sectorStats[category].totalWins++;
+    this.sectorStats[category].totalPnlSol += pnlSol;
   }
 
-  public getCategoryMomentum(category: TokenCategory): number {
-    const s = this.sectorStats[category];
-    if (!s || s.totalEvaluated === 0) return 50;
-    const winRate = (s.totalWins / s.totalEvaluated) * 100;
-    return Math.min(100, Math.max(0, Math.floor(winRate + (s.totalPnlSol * 10))));
-  }
-
-  public getSectorSummary(): Record<TokenCategory, { evaluated: number; winRate: number; pnlSol: number }> {
-    const result: any = {};
-    for (const [cat, s] of Object.entries(this.sectorStats)) {
-      const winRate = s.totalEvaluated > 0 ? (s.totalWins / s.totalEvaluated) * 100 : 0;
-      result[cat] = {
-        evaluated: s.totalEvaluated,
-        winRate: Math.round(winRate),
-        pnlSol: s.totalPnlSol
+  public getSectorSummary(): Record<string, { evaluated: number; winRate: number; pnlSol: number }> {
+    const summary: Record<string, { evaluated: number; winRate: number; pnlSol: number }> = {};
+    for (const [cat, data] of Object.entries(this.sectorStats)) {
+      const winRate = data.totalEvaluated > 0 ? (data.totalWins / data.totalEvaluated) * 100 : 0;
+      summary[cat] = {
+        evaluated: data.totalEvaluated,
+        winRate: Number(winRate.toFixed(1)),
+        pnlSol: Number(data.totalPnlSol.toFixed(3))
       };
     }
-    return result;
+    return summary;
   }
 }

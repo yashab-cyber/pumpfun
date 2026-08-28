@@ -4,7 +4,7 @@ import { AgentConfig, Position } from '../types';
 export interface ExitSignal {
   action: 'SELL';
   mint: string;
-  reason: 'STOP_LOSS' | 'TAKE_PROFIT_1' | 'TAKE_PROFIT_2' | 'TAKE_PROFIT_3' | 'TRAILING_STOP' | 'MAX_HOLD_TIMEOUT' | 'CIRCUIT_BREAKER' | 'BREAKEVEN_STOP';
+  reason: 'STOP_LOSS' | 'TAKE_PROFIT_1' | 'TAKE_PROFIT_2' | 'TAKE_PROFIT_3' | 'TRAILING_STOP' | 'MAX_HOLD_TIMEOUT' | 'CIRCUIT_BREAKER' | 'BREAKEVEN_STOP' | 'STAGNATION_TIMEOUT';
   sellRatio: number;
   pnlPercent: number;
   pnlSol: number;
@@ -126,7 +126,19 @@ export class RiskManager {
       };
     }
 
-    // 7. Max Hold Time Limit
+    // 7. Stagnation / Inactivity Timeout (If holding for >75s with negative or flat PnL, free capital)
+    if (holdTimeSeconds >= 75 && position.pnlPercent <= 0) {
+      return {
+        action: 'SELL',
+        mint: position.mint,
+        reason: 'STAGNATION_TIMEOUT',
+        sellRatio: 1.0,
+        pnlPercent: position.pnlPercent,
+        pnlSol: position.pnlSol
+      };
+    }
+
+    // 8. Max Hold Time Limit
     if (holdTimeSeconds >= this.config.maxHoldTimeSeconds) {
       return {
         action: 'SELL',
