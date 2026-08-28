@@ -8,7 +8,7 @@ export class PositionSizer {
   }
 
   /**
-   * Calculates the optimal trade allocation based on Kelly Criterion and AI Confidence
+   * Calculates the optimal trade allocation based on Kelly Criterion, Bayesian Win Rate, and AI Confidence
    */
   public calculateTradeSize(
     aiConfidence: number = 60,
@@ -19,7 +19,7 @@ export class PositionSizer {
     const baseSize = Math.max(0.001, this.config.solPerTrade || 0.01);
     const validBalance = Math.max(0.001, Number(availableBalanceSol) || 1.0);
 
-    // 1. AI Confidence Multiplier (0.6x for 60% confidence up to 1.6x for 90%+)
+    // 1. AI Conviction Multiplier
     let confidenceMultiplier = 1.0;
     if (aiConfidence >= 90) {
       confidenceMultiplier = 1.6;
@@ -39,10 +39,18 @@ export class PositionSizer {
       devMultiplier = 0.6;
     }
 
-    // 3. Kelly Fraction Bounds
-    const targetSize = baseSize * confidenceMultiplier * devMultiplier;
+    // 3. Win-Rate Bias Multiplier
+    let winRateMultiplier = 1.0;
+    if (currentWinRate >= 70) {
+      winRateMultiplier = 1.15;
+    } else if (currentWinRate <= 35 && currentWinRate > 0) {
+      winRateMultiplier = 0.75;
+    }
 
-    // Safety: never allocate more than 35% of current available balance or less than 0.002 SOL
+    // 4. Kelly Allocation
+    const targetSize = baseSize * confidenceMultiplier * devMultiplier * winRateMultiplier;
+
+    // Strict boundary: Never allocate more than 35% of current available balance or less than 0.002 SOL
     const maxSafeSize = Math.max(0.002, validBalance * 0.35);
     const finalSize = Math.max(0.002, Math.min(targetSize, maxSafeSize));
 
