@@ -90,8 +90,9 @@ export class TradeJournal {
     let peakBalance = this.initialBalance;
     let maxDrawdownPct = 0;
 
+    const baseTimestamp = this.entries.length > 0 ? this.entries[0].entryTimestamp - 1000 : Date.now() - 3600000;
     const equityCurve: { timestamp: number; pnl: number; balance: number }[] = [
-      { timestamp: Date.now() - 3600000, pnl: 0, balance: this.initialBalance }
+      { timestamp: baseTimestamp, pnl: 0, balance: this.initialBalance }
     ];
 
     for (const trade of this.entries) {
@@ -150,15 +151,15 @@ export class TradeJournal {
     ];
     const rows = this.entries.map(e => [
       e.id,
-      `"${e.symbol}"`,
-      `"${e.name}"`,
+      `"${(e.symbol || '').replace(/"/g, '""')}"`,
+      `"${(e.name || '').replace(/"/g, '""')}"`,
       e.mint,
       e.strategy,
       e.investedSol.toFixed(4),
       e.returnedSol.toFixed(4),
       e.pnlSol.toFixed(4),
       e.pnlPercent.toFixed(2),
-      e.reason,
+      `"${(e.reason || '').replace(/"/g, '""')}"`,
       e.holdDurationSeconds,
       new Date(e.exitTimestamp).toISOString()
     ]);
