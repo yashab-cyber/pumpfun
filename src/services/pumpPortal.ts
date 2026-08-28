@@ -10,9 +10,11 @@ export class PumpPortalService {
   private apiUrl: string = 'https://pumpportal.fun/api/trade-local';
   private ws: WebSocket | null = null;
   private isConnected: boolean = false;
-  private reconnectInterval: NodeJS.Timeout | null = null;
+  private reconnectTimeout: NodeJS.Timeout | null = null;
+  private reconnectAttempts: number = 0;
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private activeSubscriptions: Set<string> = new Set();
+  private pendingSubscriptionQueue: Set<string> = new Set();
 
   private onNewTokenCallback?: (token: TokenCreationEvent) => void;
   private onTokenTradeCallback?: (trade: TradeEvent) => void;
@@ -34,12 +36,19 @@ export class PumpPortalService {
 
     this.ws.on('open', () => {
       this.isConnected = true;
+      this.reconnectAttempts = 0;
       console.log(chalk.green(`[PumpPortal] Connected successfully to stream!`));
 
       this.subscribeNewTokens();
 
+      // Flush and resubscribe active subscriptions
       if (this.activeSubscriptions.size > 0) {
-        this.subscribeTokenTrades(Array.from(this.activeSubscriptions));
+        this.flushSubscriptions(Array.from(this.activeSubscriptions));
+      }
+
+      if (this.pendingSubscriptionQueue.size > 0) {
+        this.flushSubscriptions(Array.from(this.pendingSubscriptionQueue));
+        this.pendingSubscriptionQueue.clear();
       }
 
       if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
@@ -62,7 +71,6 @@ export class PumpPortalService {
     this.ws.on('close', () => {
       this.isConnected = false;
       if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
-      console.log(chalk.yellow(`[PumpPortal] WebSocket disconnected. Reconnecting in 3s...`));
       this.scheduleReconnect();
     });
 
@@ -75,11 +83,19 @@ export class PumpPortalService {
   }
 
   private scheduleReconnect(): void {
-    if (this.reconnectInterval) return;
-    this.reconnectInterval = setTimeout(() => {
-      this.reconnectInterval = null;
+    if (this.reconnectTimeout) return;
+    this.reconnectAttempts++;
+    // Exponential backoff with jitter: 1.5s, 3s, 6s, 12s, capped at 15s
+    const baseDelay = Math.min(15000, 1500 * Math.pow(2, this.reconnectAttempts - 1));
+    const jitter = Math.floor(Math.random() * 500);
+    const delay = baseDelay + jitter;
+
+    console.log(chalk.yellow(`[PumpPortal] Reconnecting in ${(delay / 1000).toFixed(1)}s (Attempt #${this.reconnectAttempts})...`));
+
+    this.reconnectTimeout = setTimeout(() => {
+      this.reconnectTimeout = null;
       this.initWebSocket();
-    }, 3000);
+    }, delay);
   }
 
   private handleMessage(msg: any): void {
@@ -134,11 +150,8 @@ export class PumpPortalService {
     this.ws.send(JSON.stringify(payload));
   }
 
-  public subscribeTokenTrades(mints: string[]): void {
+  private flushSubscriptions(mints: string[]): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN || mints.length === 0) return;
-    for (const m of mints) {
-      this.activeSubscriptions.add(m);
-    }
     const payload = {
       method: 'subscribeTokenTrade',
       keys: mints
@@ -146,11 +159,25 @@ export class PumpPortalService {
     this.ws.send(JSON.stringify(payload));
   }
 
+  public subscribeTokenTrades(mints: string[]): void {
+    for (const m of mints) {
+      this.activeSubscriptions.add(m);
+    }
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      for (const m of mints) {
+        this.pendingSubscriptionQueue.add(m);
+      }
+      return;
+    }
+    this.flushSubscriptions(mints);
+  }
+
   public unsubscribeTokenTrades(mints: string[]): void {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN || mints.length === 0) return;
     for (const m of mints) {
       this.activeSubscriptions.delete(m);
+      this.pendingSubscriptionQueue.delete(m);
     }
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN || mints.length === 0) return;
     const payload = {
       method: 'unsubscribeTokenTrade',
       keys: mints
@@ -215,7 +242,7 @@ export class PumpPortalService {
   }
 
   public disconnect(): void {
-    if (this.reconnectInterval) clearInterval(this.reconnectInterval);
+    if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
     if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
     if (this.ws) {
       this.ws.close();
