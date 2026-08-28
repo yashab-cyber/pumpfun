@@ -33,6 +33,16 @@ export class MigrationPredictor {
       history.shift();
     }
 
+    // Periodic memory cleanup of inactive tokens
+    if (this.curveHistory.size > 1000) {
+      for (const [m, h] of this.curveHistory.entries()) {
+        if (h.length === 0 || (now - h[h.length - 1].timestamp) > 300000) {
+          this.curveHistory.delete(m);
+          this.emaVelocityMap.delete(m);
+        }
+      }
+    }
+
     const currentVSol = vSolLamports;
     const progress = BondingCurveCalculator.calculateProgress(currentVSol);
     const realSol = Math.max(0, (currentVSol - BondingCurveCalculator.INITIAL_VIRTUAL_SOL) / 1e9);
