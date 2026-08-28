@@ -125,15 +125,21 @@ export class PumpFunAgent {
     this.telegramBot.registerHandlers({
       getStatus: async () => {
         const stats = this.config.tradingMode === 'live' ? await this.liveTrader!.getStats() : this.paperTrader!.getStats();
+        const mode = this.config.tradingMode.toUpperCase();
+        const strat = this.strategyCoordinator.getActiveStrategy();
+        const pnlEmoji = stats.realizedPnlSol >= 0 ? '🟢' : '🔴';
+        const pnlSign = stats.realizedPnlSol >= 0 ? '+' : '';
+
         return (
-          `📊 <b>PUMP.FUN AGENT STATUS</b>\n\n` +
-          `• <b>Mode:</b> <code>${this.config.tradingMode.toUpperCase()}</code>\n` +
-          `• <b>Active Strategy:</b> <b>${this.strategyCoordinator.getActiveStrategy()}</b>\n` +
-          `• <b>Bankroll:</b> ${stats.currentBalanceSol.toFixed(4)} SOL\n` +
-          `• <b>Safe Vault:</b> 🔒 ${this.profitVault.getTotalVaulted().toFixed(4)} SOL (Cycle #${this.profitVault.getCycleCount()})\n` +
-          `• <b>Realized PnL:</b> ${stats.realizedPnlSol >= 0 ? '+' : ''}${stats.realizedPnlSol.toFixed(4)} SOL\n` +
-          `• <b>Win Rate:</b> ${stats.winRate.toFixed(1)}% (${stats.winningTrades}W / ${stats.losingTrades}L)\n` +
-          `• <b>Scanned / Passed:</b> ${this.processedTokensCount} / ${this.passedTokensCount}`
+          `📊 <b>QUANTUM MATRIX TELEMETRY</b>\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+          `⚡ <b>Mode:</b> <code>${mode}</code> | <b>Engine:</b> 🟢 <code>ACTIVE</code>\n` +
+          `🎯 <b>Active Strategy:</b> <b>${strat}</b>\n` +
+          `💰 <b>Bankroll:</b> <b>${stats.currentBalanceSol.toFixed(4)} SOL</b>\n` +
+          `🔒 <b>Safe Vault:</b> <b>${this.profitVault.getTotalVaulted().toFixed(4)} SOL</b> (Cycle #${this.profitVault.getCycleCount()})\n` +
+          `📈 <b>Realized PnL:</b> ${pnlEmoji} <b>${pnlSign}${stats.realizedPnlSol.toFixed(4)} SOL</b>\n` +
+          `🏆 <b>Win Rate:</b> <b>${stats.winRate.toFixed(1)}%</b> (${stats.winningTrades}W / ${stats.losingTrades}L)\n` +
+          `🔍 <b>Tokens Scanned:</b> ${this.processedTokensCount} | <b>Passed:</b> ${this.passedTokensCount}`
         );
       },
       getPositions: async () => {
@@ -144,8 +150,8 @@ export class PumpFunAgent {
       panicSellAll: async () => {
         await this.panicSellAll();
       },
-      sellSinglePosition: async (mint: string) => {
-        await this.sellSinglePosition(mint);
+      sellSinglePosition: async (mint: string, ratio: number = 1.0) => {
+        await this.sellSinglePosition(mint, ratio);
       },
       changeStrategy: (strategy: StrategyType) => {
         this.changeStrategy(strategy);
@@ -155,6 +161,18 @@ export class PumpFunAgent {
           totalVaulted: this.profitVault.getTotalVaulted(),
           cycles: this.profitVault.getCycleCount()
         };
+      },
+      getConfig: () => {
+        return this.config;
+      },
+      updateConfig: (newConfig: Partial<AgentConfig>) => {
+        this.updateConfig(newConfig);
+      },
+      getRecentAiDecisions: async () => {
+        return this.sqliteMemory.getRecentAIDecisions(5);
+      },
+      getKothPredictions: () => {
+        return Array.from(this.latestPredictions.values());
       }
     });
   }
@@ -495,17 +513,18 @@ export class PumpFunAgent {
     this.webServer.broadcastLog('🚨 PANIC SELL ALL completed.');
   }
 
-  public async sellSinglePosition(mint: string): Promise<void> {
+  public async sellSinglePosition(mint: string, ratio: number = 1.0): Promise<void> {
     const position = this.config.tradingMode === 'live'
       ? this.liveTrader?.getPosition(mint)
       : this.paperTrader?.getPosition(mint);
 
     if (position && position.status === 'OPEN') {
+      const clampedRatio = Math.max(0.1, Math.min(1.0, ratio));
       const manualSignal: ExitSignal = {
         action: 'SELL',
         mint: position.mint,
-        reason: 'STOP_LOSS',
-        sellRatio: 1.0,
+        reason: clampedRatio >= 1.0 ? 'STOP_LOSS' : 'TAKE_PROFIT_1',
+        sellRatio: clampedRatio,
         pnlPercent: position.pnlPercent,
         pnlSol: position.pnlSol
       };

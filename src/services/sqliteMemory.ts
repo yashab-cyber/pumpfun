@@ -398,6 +398,15 @@ export class SQLiteMemory {
     );
   }
 
+  public async getRecentAIDecisions(limit: number = 5): Promise<any[]> {
+    if (!this.db) return [];
+    return this.db.all<any[]>(
+      `SELECT mint, symbol, decision, confidence, reasoning, tags, timestamp
+       FROM ai_decisions ORDER BY timestamp DESC LIMIT ?`,
+      [limit]
+    );
+  }
+
   // --- Profit Vault Cycle Records ---
 
   public async recordVaultCycle(
