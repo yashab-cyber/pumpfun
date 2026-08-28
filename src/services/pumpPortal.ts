@@ -188,7 +188,7 @@ export class PumpPortalService {
   public async executeLiveTrade(params: {
     action: 'buy' | 'sell';
     mint: string;
-    amount: number;
+    amount: number | string;
     denominatedInSol: boolean;
     slippagePercent?: number;
     priorityFeeSol?: number;

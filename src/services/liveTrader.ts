@@ -64,7 +64,10 @@ export class LiveTrader {
     return this.positions.get(mint);
   }
 
-  public async canOpenPosition(): Promise<boolean> {
+  public async canOpenPosition(mint?: string): Promise<boolean> {
+    if (mint && this.positions.has(mint) && this.positions.get(mint)?.status === 'OPEN') {
+      return false; // Prevent duplicate entries in the same token
+    }
     const openCount = this.getOpenPositions().length;
     if (openCount >= this.config.maxActivePositions) {
       return false;
@@ -79,11 +82,16 @@ export class LiveTrader {
     tags: string[] = [],
     strategyName: string = 'SNIPER',
     aiConfidence?: number,
-    aiReasoning?: string
+    aiReasoning?: string,
+    tradeSizeSol?: number,
+    slippagePercent?: number
   ): Promise<Position | null> {
     if (this.isExecutingTrade) return null;
-    const canBuy = await this.canOpenPosition();
+    const canBuy = await this.canOpenPosition(token.mint);
     if (!canBuy) return null;
+
+    const actualTradeSize = Math.max(0.001, tradeSizeSol || this.config.solPerTrade);
+    const actualSlippage = typeof slippagePercent === 'number' ? slippagePercent : this.config.slippagePercent;
 
     this.isExecutingTrade = true;
     try {
@@ -91,9 +99,9 @@ export class LiveTrader {
       const res = await this.pumpPortal.executeLiveTrade({
         action: 'buy',
         mint: token.mint,
-        amount: this.config.solPerTrade,
+        amount: actualTradeSize,
         denominatedInSol: true,
-        slippagePercent: this.config.slippagePercent,
+        slippagePercent: actualSlippage,
         priorityFeeSol: this.config.priorityFeeLamports / 1e9
       });
 
@@ -104,14 +112,11 @@ export class LiveTrader {
 
       let estimatedPriceSol = 0.00000003;
       if (token.vSolInBondingCurve && token.vTokensInBondingCurve && token.vTokensInBondingCurve > 0) {
-        const realVSol = token.vSolInBondingCurve > 1e6 ? token.vSolInBondingCurve / 1e9 : token.vSolInBondingCurve;
-        const realVTokens = token.vTokensInBondingCurve > 1e9 ? token.vTokensInBondingCurve / 1e6 : token.vTokensInBondingCurve;
-        if (realVTokens > 0) {
-          estimatedPriceSol = realVSol / realVTokens;
-        }
+        estimatedPriceSol = (token.vSolInBondingCurve > 1e6 ? token.vSolInBondingCurve / 1e9 : token.vSolInBondingCurve) /
+                            (token.vTokensInBondingCurve > 1e9 ? token.vTokensInBondingCurve / 1e6 : token.vTokensInBondingCurve);
       }
-      const fillPriceSol = estimatedPriceSol * (1 + (this.config.slippagePercent / 100));
-      const tokenAmount = this.config.solPerTrade / fillPriceSol;
+      const fillPriceSol = estimatedPriceSol * (1 + (actualSlippage / 100));
+      const tokenAmount = actualTradeSize / fillPriceSol;
 
       const position: Position = {
         mint: token.mint,
@@ -123,7 +128,7 @@ export class LiveTrader {
         currentPriceSol: fillPriceSol,
         tokenAmount: tokenAmount,
         originalTokenAmount: tokenAmount,
-        investedSol: this.config.solPerTrade,
+        investedSol: actualTradeSize,
         highestPriceSol: fillPriceSol,
         buyTimestamp: Date.now(),
         pnlPercent: 0,
@@ -148,7 +153,7 @@ export class LiveTrader {
         chalk.green.bold(
           `\n[LIVE TRADING] 🟢 BOUGHT ${token.symbol}!\n` +
           `  • Mint: ${token.mint}\n` +
-          `  • Invested: ${this.config.solPerTrade.toFixed(4)} SOL\n` +
+          `  • Invested: ${actualTradeSize.toFixed(4)} SOL\n` +
           `  • AI Confidence: ${aiConfidence ? `${aiConfidence}%` : 'N/A'}\n` +
           `  • Tx Signature: https://solscan.io/tx/${res.signature}`
         )
@@ -171,10 +176,13 @@ export class LiveTrader {
     try {
       console.log(chalk.yellow(`[LiveTrader] Sending on-chain SELL for ${position.symbol} (${signal.reason})...`));
 
+      const clampedRatio = Math.max(0.01, Math.min(1.0, signal.sellRatio));
+      const sellPercentString = clampedRatio >= 1.0 ? '100%' : `${Math.floor(clampedRatio * 100)}%`;
+
       const res = await this.pumpPortal.executeLiveTrade({
         action: 'sell',
         mint: position.mint,
-        amount: signal.sellRatio >= 1.0 ? 100 : Math.floor(signal.sellRatio * 100),
+        amount: sellPercentString,
         denominatedInSol: false,
         slippagePercent: this.config.slippagePercent,
         priorityFeeSol: this.config.priorityFeeLamports / 1e9
@@ -186,11 +194,12 @@ export class LiveTrader {
         return;
       }
 
-      const clampedRatio = Math.max(0.01, Math.min(1.0, signal.sellRatio));
       const portionInvested = position.investedSol * clampedRatio;
       const fillPriceSol = position.currentPriceSol * (1 - (this.config.slippagePercent / 100));
       const tokensToSell = position.tokenAmount * clampedRatio;
       const solReturned = tokensToSell * fillPriceSol;
+      const realizedPnlSol = solReturned - portionInvested;
+      const realizedPnlPercent = position.entryPriceSol > 0 ? ((fillPriceSol - position.entryPriceSol) / position.entryPriceSol) * 100 : 0;
 
       if (clampedRatio >= 1.0) {
         position.status = 'CLOSED';
@@ -213,7 +222,7 @@ export class LiveTrader {
           `\n[LIVE TRADING] 🔴 EXITED ${position.symbol} (${signal.reason})!\n` +
           `  • Tx Signature: https://solscan.io/tx/${res.signature}\n` +
           `  • Reason: ${signal.reason}\n` +
-          `  • Est. PnL: ${signal.pnlPercent.toFixed(2)}% (${signal.pnlSol.toFixed(4)} SOL)`
+          `  • Realized PnL: ${realizedPnlPercent.toFixed(2)}% (${realizedPnlSol.toFixed(4)} SOL)`
         )
       );
 
@@ -225,7 +234,7 @@ export class LiveTrader {
 
       const tradeId = `${position.mint.substring(0, 6)}_${Date.now()}`;
       const holdSecs = Math.floor((Date.now() - position.buyTimestamp) / 1000);
-      const isWin = signal.pnlSol >= 0;
+      const isWin = realizedPnlSol >= 0;
 
       // Record in SQLite Memory & Journal
       if (this.sqlite) {
@@ -239,8 +248,8 @@ export class LiveTrader {
           exitPriceSol: fillPriceSol,
           investedSol: portionInvested,
           returnedSol: solReturned,
-          pnlSol: signal.pnlSol,
-          pnlPercent: signal.pnlPercent,
+          pnlSol: realizedPnlSol,
+          pnlPercent: realizedPnlPercent,
           reason: signal.reason,
           aiConfidence: position.aiConfidence,
           aiReasoning: position.aiReasoning,
@@ -249,7 +258,7 @@ export class LiveTrader {
         });
 
         if (devPubkey) {
-          const isRug = signal.reason === 'STOP_LOSS' && signal.pnlPercent <= -15;
+          const isRug = signal.reason === 'STOP_LOSS' && realizedPnlPercent <= -15;
           await this.sqlite.updateDevReputation(devPubkey, isWin, isRug);
         }
       }
@@ -266,8 +275,8 @@ export class LiveTrader {
           exitPriceSol: fillPriceSol,
           investedSol: portionInvested,
           returnedSol: solReturned,
-          pnlSol: signal.pnlSol,
-          pnlPercent: signal.pnlPercent,
+          pnlSol: realizedPnlSol,
+          pnlPercent: realizedPnlPercent,
           reason: signal.reason,
           entryTimestamp: position.buyTimestamp,
           exitTimestamp: Date.now(),
@@ -297,7 +306,7 @@ export class LiveTrader {
         totalTrades: a.totalTrades,
         winningTrades: a.winningTrades,
         losingTrades: a.losingTrades,
-        realizedPnlSol: cumulativeRealizedPnl,
+        realizedPnlSol: a.netRealizedPnlSol,
         totalVolumeSol: a.totalTrades * this.config.solPerTrade,
         winRate: a.winRate,
         profitFactor: a.profitFactor,

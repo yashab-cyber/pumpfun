@@ -101,10 +101,14 @@ export class ProfitVault {
           const keypair = this.solanaService.getKeypair();
           if (keypair) {
             const destPubkey = new PublicKey(this.config.vaultDestinationWallet);
-            const lamports = Math.floor(amountToVault * 1e9);
             const connection = this.solanaService.getConnection();
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+            const lamports = Math.floor(amountToVault * 1e9);
 
-            const tx = new Transaction().add(
+            const tx = new Transaction({
+              recentBlockhash: blockhash,
+              feePayer: keypair.publicKey
+            }).add(
               SystemProgram.transfer({
                 fromPubkey: keypair.publicKey,
                 toPubkey: destPubkey,
@@ -112,7 +116,10 @@ export class ProfitVault {
               })
             );
 
-            txSignature = await connection.sendTransaction(tx, [keypair]);
+            txSignature = await connection.sendTransaction(tx, [keypair], {
+              skipPreflight: false,
+              preflightCommitment: 'confirmed'
+            });
             console.log(chalk.green.bold(`[Profit Vault] ⚡ On-Chain Transfer of ${amountToVault.toFixed(4)} SOL sent to cold vault: ${txSignature}`));
           }
         } catch (err: any) {

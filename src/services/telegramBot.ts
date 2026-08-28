@@ -232,8 +232,10 @@ export class TelegramBot {
     for (const pos of positions) {
       const pnlColor = pos.pnlPercent >= 0 ? '🟢' : '🔴';
       const holdSec = Math.floor((Date.now() - pos.buyTimestamp) / 1000);
+      const symbol = this.escapeHtml(pos.symbol);
+      const name = this.escapeHtml(pos.name);
       text +=
-        `${pnlColor} <b>${pos.symbol}</b> (${pos.name})\n` +
+        `${pnlColor} <b>${symbol}</b> (${name})\n` +
         `  • PnL: <b>${pos.pnlPercent >= 0 ? '+' : ''}${pos.pnlPercent.toFixed(2)}%</b> (${pos.pnlSol >= 0 ? '+' : ''}${pos.pnlSol.toFixed(4)} SOL)\n` +
         `  • Invested: ${pos.investedSol.toFixed(4)} SOL | Hold: ${holdSec}s\n` +
         `  • Mint: <code>${pos.mint}</code>\n\n`;

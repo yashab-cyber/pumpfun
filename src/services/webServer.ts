@@ -6,6 +6,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import chalk from 'chalk';
 import { TradeJournal } from './db';
 import { StrategyType } from '../strategies';
+import { Backtester } from './backtester';
 
 export class WebServer {
   private app: express.Application;
@@ -17,14 +18,17 @@ export class WebServer {
   private onStrategyChangeCallback?: (strat: StrategyType) => void;
   private onConfigUpdateCallback?: (newConfig: any) => void;
   private journal?: TradeJournal;
+  private backtester?: Backtester;
 
-  constructor(journal?: TradeJournal) {
+  constructor(journal?: TradeJournal, backtester?: Backtester) {
     this.journal = journal;
+    this.backtester = backtester;
     this.app = express();
     this.app.use(cors());
     this.app.use(express.json());
     this.app.use(express.static(path.join(__dirname, '../public')));
-    this.app.use(express.static(path.join(__dirname, '../../src/public')));
+    this.app.use(express.static(path.join(process.cwd(), 'src/public')));
+    this.app.use(express.static(path.join(process.cwd(), 'dist/public')));
 
     this.server = http.createServer(this.app);
     this.io = new SocketIOServer(this.server, {
@@ -51,6 +55,20 @@ export class WebServer {
         return res.json({});
       }
       res.json(this.journal.getAnalytics());
+    });
+
+    this.app.post('/api/backtest', async (req, res) => {
+      if (!this.backtester) {
+        return res.status(404).json({ error: 'Backtester not configured' });
+      }
+      const { initialBalanceSol, tradeSizeSol, tp1Percent, stopLossPercent } = req.body || {};
+      const result = await this.backtester.runBacktest(
+        Number(initialBalanceSol) || 1.0,
+        Number(tradeSizeSol) || 0.01,
+        Number(tp1Percent) || 50,
+        Number(stopLossPercent) || -20
+      );
+      res.json(result);
     });
   }
 

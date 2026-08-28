@@ -52,13 +52,16 @@ export class Backtester {
     const equityCurve: Array<{ tradeIndex: number; balance: number }> = [{ tradeIndex: 0, balance }];
     const returns: number[] = [];
 
+    const safeStopLoss = stopLossPercent > 0 ? -stopLossPercent : stopLossPercent;
+    const safeTp1 = Math.max(1, tp1Percent);
+
     trades.forEach((t: DBTrade, i: number) => {
       // Simulate trade with parameter sensitivity
       let simulatedPnlPct = t.pnlPercent;
-      if (t.pnlPercent >= tp1Percent) {
-        simulatedPnlPct = tp1Percent;
-      } else if (t.pnlPercent <= stopLossPercent) {
-        simulatedPnlPct = stopLossPercent;
+      if (t.pnlPercent >= safeTp1) {
+        simulatedPnlPct = safeTp1;
+      } else if (t.pnlPercent <= safeStopLoss) {
+        simulatedPnlPct = safeStopLoss;
       }
 
       const normalizedPnlSol = (simulatedPnlPct / 100) * safeTradeSize;

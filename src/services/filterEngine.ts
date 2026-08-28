@@ -29,11 +29,14 @@ export class FilterEngine {
       return { passed: false, reason: 'Unpronounceable spam ticker pattern detected' };
     }
 
-    // 4. Blacklist check on name and symbol
+    // 4. Blacklist check on name and symbol (word-boundary match to prevent false positives like 'greatest' matching 'test')
     const textToCheck = `${token.name || ''} ${token.symbol || ''}`.toLowerCase();
     if (this.config.blacklistedWords && this.config.blacklistedWords.length > 0) {
       for (const badWord of this.config.blacklistedWords) {
-        if (badWord && textToCheck.includes(badWord.toLowerCase())) {
+        if (!badWord) continue;
+        const escaped = badWord.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
+        if (regex.test(textToCheck)) {
           return { passed: false, reason: `Contains blacklisted keyword: "${badWord}"` };
         }
       }

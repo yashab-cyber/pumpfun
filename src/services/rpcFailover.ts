@@ -50,6 +50,12 @@ export class RpcFailoverManager {
     }
   }
 
+  private onFailoverCallback?: (node: RpcNode) => void;
+
+  public setOnFailover(callback: (node: RpcNode) => void): void {
+    this.onFailoverCallback = callback;
+  }
+
   private failoverToNextHealthy(): void {
     const nextIndex = this.nodes.findIndex(n => n.isHealthy);
     if (nextIndex !== -1 && nextIndex !== this.activeIndex) {
@@ -59,6 +65,7 @@ export class RpcFailoverManager {
         )
       );
       this.activeIndex = nextIndex;
+      this.onFailoverCallback?.(this.nodes[this.activeIndex]);
     }
   }
 

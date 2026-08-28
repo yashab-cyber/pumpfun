@@ -725,8 +725,32 @@
       document.getElementById('aiModal').classList.add('hidden');
     }
 
-    function runBacktestSimulation() {
-      alert('🔬 Backtest Simulation completed! Sharpe: 2.45, Win Rate: 68.2%, Optimal TP: +50%');
+    async function runBacktestSimulation() {
+      try {
+        const tradeSize = parseFloat(document.getElementById('setTradeSize')?.value || '0.01');
+        const tp1 = parseFloat(document.getElementById('setTp1')?.value || '50');
+        const sl = parseFloat(document.getElementById('setStopLoss')?.value || '-20');
+        const res = await fetch('/api/backtest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            initialBalanceSol: 1.0,
+            tradeSizeSol: tradeSize,
+            tp1Percent: tp1,
+            stopLossPercent: sl
+          })
+        });
+        const data = await res.json();
+        if (data) {
+          document.getElementById('btSharpe').textContent = data.sharpeRatio !== undefined ? data.sharpeRatio : 'N/A';
+          document.getElementById('btDrawdown').textContent = (data.maxDrawdownPercent !== undefined ? data.maxDrawdownPercent : 0) + '%';
+          document.getElementById('btProfitFactor').textContent = data.profitFactor !== undefined ? data.profitFactor : 'N/A';
+          document.getElementById('btOptimalTp').textContent = '+' + (data.optimalTp1Percent || tp1) + '%';
+          alert(`🔬 Backtest simulation finished over ${data.totalTrades} trade(s) in memory! Win Rate: ${data.winRate}%, Net PnL: ${data.netPnlSol >= 0 ? '+' : ''}${data.netPnlSol} SOL`);
+        }
+      } catch (err) {
+        alert('Backtest request failed: ' + err.message);
+      }
     }
 
     function initChart() {

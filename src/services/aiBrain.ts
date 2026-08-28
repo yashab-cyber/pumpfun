@@ -349,7 +349,7 @@ export class AIBrain {
       const convictionTier = conf >= 85 ? 'SUPER_SNIPE' : conf >= 75 ? 'HIGH_CONVICTION' : conf >= 60 ? 'STANDARD' : 'SPECULATIVE';
 
       return {
-        shouldBuy: Boolean(content.shouldBuy && conf >= 60),
+        shouldBuy: Boolean(content.shouldBuy),
         confidenceScore: conf,
         suggestedTpPercent: Number(content.suggestedTpPercent || defTp),
         suggestedSlPercent: Number(content.suggestedSlPercent || -20),

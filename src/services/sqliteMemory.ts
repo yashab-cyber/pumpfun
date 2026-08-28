@@ -1,3 +1,4 @@
+import fs from 'fs';
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 import path from 'path';
@@ -38,6 +39,11 @@ export class SQLiteMemory {
   private dbPath: string = path.join(__dirname, '../../data/memory.sqlite');
 
   public async init(): Promise<void> {
+    const dir = path.dirname(this.dbPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
     this.db = await open({
       filename: this.dbPath,
       driver: sqlite3.Database

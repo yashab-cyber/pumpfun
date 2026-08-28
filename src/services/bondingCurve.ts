@@ -85,14 +85,13 @@ export class BondingCurveCalculator {
     return Math.min(100, Math.max(0, progress));
   }
 
-  /**
-   * Calculate current spot price in SOL from curve reserves
-   */
   public static calculateSpotPriceSol(vSolLamports: number, vTokenUnits: number): number {
     if (!vSolLamports || !vTokenUnits || vTokenUnits <= 0) return 0.00000003;
-    const sol = vSolLamports / 1e9;
-    const tokens = vTokenUnits / 1e6;
-    return sol / tokens;
+    const sol = vSolLamports > 1e6 ? vSolLamports / 1e9 : vSolLamports;
+    const tokens = vTokenUnits > 1e11 ? vTokenUnits / 1e6 : vTokenUnits;
+    if (tokens <= 0) return 0.00000003;
+    const price = sol / tokens;
+    return (price > 0 && isFinite(price)) ? price : 0.00000003;
   }
 
   /**

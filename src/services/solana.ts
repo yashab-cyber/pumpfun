@@ -35,6 +35,17 @@ export class SolanaService {
     return this.connection;
   }
 
+  public updateConnection(newConnection: Connection): void {
+    this.connection = newConnection;
+  }
+
+  public updateRpcUrl(rpcUrl: string): void {
+    this.connection = new Connection(rpcUrl, {
+      commitment: 'confirmed',
+      confirmTransactionInitialTimeout: 30000
+    });
+  }
+
   public getKeypair(): Keypair | undefined {
     return this.keypair;
   }

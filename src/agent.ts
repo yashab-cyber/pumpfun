@@ -31,6 +31,7 @@ import { SocialSentimentAnalyzer } from './services/socialSentiment';
 import { LossRecoveryManager } from './services/lossRecovery';
 import { SandwichGuard } from './services/sandwichGuard';
 import { ReinvestmentEngine } from './services/reinvestmentEngine';
+import { Backtester } from './services/backtester';
 
 export class PumpFunAgent {
   private config: AgentConfig;
@@ -63,6 +64,7 @@ export class PumpFunAgent {
   private lossRecovery: LossRecoveryManager;
   private sandwichGuard: SandwichGuard;
   private reinvestmentEngine: ReinvestmentEngine;
+  private backtester: Backtester;
 
   private isRunning: boolean = false;
   private monitorInterval: NodeJS.Timeout | null = null;
@@ -77,6 +79,9 @@ export class PumpFunAgent {
     this.config = config;
     this.solanaService = new SolanaService(config.rpcUrl, config.privateKey);
     this.rpcFailover = new RpcFailoverManager(config.rpcUrl);
+    this.rpcFailover.setOnFailover((node) => {
+      this.solanaService.updateConnection(node.connection);
+    });
     this.filterEngine = new FilterEngine(config);
     this.riskManager = new RiskManager(config);
     this.pumpPortal = new PumpPortalService(this.solanaService);
@@ -98,7 +103,8 @@ export class PumpFunAgent {
     this.lossRecovery = new LossRecoveryManager();
     this.sandwichGuard = new SandwichGuard();
     this.reinvestmentEngine = new ReinvestmentEngine(config.solPerTrade, 0.05);
-    this.webServer = new WebServer(this.journal);
+    this.backtester = new Backtester(this.sqliteMemory);
+    this.webServer = new WebServer(this.journal, this.backtester);
     this.notificationService = new NotificationService();
     this.rugCheckService = new RugCheckService(this.solanaService);
     this.copyTrader = new CopyTrader();
@@ -259,22 +265,20 @@ export class PumpFunAgent {
     // Dynamic Sizing with Sandwich Guard & Reinvestment Engine
     const currentBal = this.config.tradingMode === 'live' ? await this.solanaService.getBalance() : (this.paperTrader?.getBalance() || 1.0);
     const recoveryMultiplier = this.lossRecovery.getRecoveryMultiplier(aiDecision.confidenceScore);
+    const devRepScore = Math.max(0, 100 - rugCheck.score);
     const baseDynamicSizeSol = this.positionSizer.calculateTradeSize(
       aiDecision.confidenceScore,
       this.journal.getAnalytics().winRate,
-      rugCheck.score,
+      devRepScore,
       currentBal
     );
 
     const stats = this.config.tradingMode === 'live' ? await this.liveTrader!.getStats() : this.paperTrader!.getStats();
     const compoundedSizeSol = this.reinvestmentEngine.calculateCompoundedTradeSize(stats.realizedPnlSol, currentBal);
     const finalSizeSol = Number((Math.max(baseDynamicSizeSol, compoundedSizeSol) * recoveryMultiplier).toFixed(4));
-    this.config.solPerTrade = finalSizeSol;
 
     const sandwich = this.sandwichGuard.evaluateSandwichRisk(finalSizeSol, token.vSolInBondingCurve || 30000000000);
-    if (sandwich.isHighRisk) {
-      this.config.slippagePercent = sandwich.maxSafeSlippagePct;
-    }
+    const effectiveSlippage = sandwich.isHighRisk ? sandwich.maxSafeSlippagePct : this.config.slippagePercent;
 
     if (this.config.tradingMode === 'live') {
       const optimalFee = await this.gasOptimizer.getOptimalPriorityFee();
@@ -300,7 +304,9 @@ export class PumpFunAgent {
         aiDecision.tags,
         this.strategyCoordinator.getActiveStrategy(),
         aiDecision.confidenceScore,
-        aiDecision.reasoning
+        aiDecision.reasoning,
+        finalSizeSol,
+        effectiveSlippage
       );
     } else if (this.paperTrader) {
       position = this.paperTrader.simulateBuy(
@@ -308,7 +314,9 @@ export class PumpFunAgent {
         aiDecision.tags,
         this.strategyCoordinator.getActiveStrategy(),
         aiDecision.confidenceScore,
-        aiDecision.reasoning
+        aiDecision.reasoning,
+        finalSizeSol,
+        effectiveSlippage
       );
     }
 
@@ -364,7 +372,11 @@ export class PumpFunAgent {
       }
     }
 
-    if (this.copyTrader.shouldCopy(trade)) {
+    const isAlreadyOpen = this.config.tradingMode === 'live'
+      ? this.liveTrader?.getPosition(trade.mint)?.status === 'OPEN'
+      : this.paperTrader?.getPosition(trade.mint)?.status === 'OPEN';
+
+    if (!isAlreadyOpen && this.copyTrader.shouldCopy(trade)) {
       this.webServer.broadcastLog(`Copy-trade triggered for alpha wallet on ${trade.mint}`);
       const mockToken: TokenCreationEvent = {
         signature: trade.signature,
@@ -372,32 +384,34 @@ export class PumpFunAgent {
         traderPublicKey: trade.traderPublicKey,
         txType: 'create',
         initialBuy: this.config.solPerTrade,
-        name: 'Alpha Target',
-        symbol: 'ALPHA',
+        name: this.tokenSymbolMap.get(trade.mint) ? `${symbol} Token` : 'Alpha Target',
+        symbol: symbol !== 'UNKNOWN' ? symbol : 'ALPHA',
         uri: '',
         timestamp: Date.now()
       };
       await this.handleNewToken(mockToken);
     }
 
-    const stratDecision = this.strategyManager.evaluateTradeTick(trade);
-    if (stratDecision.shouldBuy) {
-      const mockToken: TokenCreationEvent = {
-        signature: trade.signature,
-        mint: trade.mint,
-        traderPublicKey: trade.traderPublicKey,
-        txType: 'create',
-        initialBuy: this.config.solPerTrade,
-        bondingCurveKey: trade.bondingCurveKey,
-        vTokensInBondingCurve: trade.vTokensInBondingCurve,
-        vSolInBondingCurve: trade.vSolInBondingCurve,
-        marketCapSol: trade.marketCapSol,
-        name: 'Breakout Token',
-        symbol: 'BREAKOUT',
-        uri: '',
-        timestamp: Date.now()
-      };
-      await this.handleNewToken(mockToken);
+    if (!isAlreadyOpen) {
+      const stratDecision = this.strategyManager.evaluateTradeTick(trade);
+      if (stratDecision.shouldBuy) {
+        const mockToken: TokenCreationEvent = {
+          signature: trade.signature,
+          mint: trade.mint,
+          traderPublicKey: trade.traderPublicKey,
+          txType: 'create',
+          initialBuy: this.config.solPerTrade,
+          bondingCurveKey: trade.bondingCurveKey,
+          vTokensInBondingCurve: trade.vTokensInBondingCurve,
+          vSolInBondingCurve: trade.vSolInBondingCurve,
+          marketCapSol: trade.marketCapSol,
+          name: this.tokenSymbolMap.get(trade.mint) ? `${symbol} Token` : 'Breakout Token',
+          symbol: symbol !== 'UNKNOWN' ? symbol : 'BREAKOUT',
+          uri: '',
+          timestamp: Date.now()
+        };
+        await this.handleNewToken(mockToken);
+      }
     }
 
     const position = this.config.tradingMode === 'live'
@@ -408,7 +422,7 @@ export class PumpFunAgent {
 
     let newPriceSol = 0;
     if (trade.vSolInBondingCurve && trade.vTokensInBondingCurve && trade.vTokensInBondingCurve > 0) {
-      newPriceSol = (trade.vSolInBondingCurve / 1e9) / (trade.vTokensInBondingCurve / 1e6);
+      newPriceSol = BondingCurveCalculator.calculateSpotPriceSol(trade.vSolInBondingCurve, trade.vTokensInBondingCurve);
       position.bondingCurveProgress = BondingCurveCalculator.calculateProgress(trade.vSolInBondingCurve);
     } else if (trade.solAmount && trade.tokenAmount && trade.tokenAmount > 0) {
       const sol = trade.solAmount > 1e6 ? trade.solAmount / 1e9 : trade.solAmount;

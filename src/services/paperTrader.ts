@@ -60,7 +60,10 @@ export class PaperTrader {
     return this.positions.get(mint);
   }
 
-  public canOpenPosition(): boolean {
+  public canOpenPosition(mint?: string): boolean {
+    if (mint && this.positions.has(mint) && this.positions.get(mint)?.status === 'OPEN') {
+      return false; // Prevent duplicate entries in the same token
+    }
     const openCount = this.getOpenPositions().length;
     return openCount < this.config.maxActivePositions && this.virtualSolBalance >= this.config.solPerTrade;
   }
@@ -70,17 +73,22 @@ export class PaperTrader {
     tags: string[] = [],
     strategyName: string = 'SNIPER',
     aiConfidence?: number,
-    aiReasoning?: string
+    aiReasoning?: string,
+    tradeSizeSol?: number,
+    slippagePercent?: number
   ): Position | null {
-    if (!this.canOpenPosition()) return null;
+    if (!this.canOpenPosition(token.mint)) return null;
 
-    const solAmount = Math.max(0.001, this.config.solPerTrade);
+    const solAmount = Math.max(0.001, tradeSizeSol || this.config.solPerTrade);
+    const actualSlippage = typeof slippagePercent === 'number' ? slippagePercent : this.config.slippagePercent;
+
     let estimatedPriceSol = 0.00000003;
     if (token.vSolInBondingCurve && token.vTokensInBondingCurve && token.vTokensInBondingCurve > 0) {
-      estimatedPriceSol = (token.vSolInBondingCurve / 1e9) / (token.vTokensInBondingCurve / 1e6);
+      estimatedPriceSol = (token.vSolInBondingCurve > 1e6 ? token.vSolInBondingCurve / 1e9 : token.vSolInBondingCurve) /
+                          (token.vTokensInBondingCurve > 1e9 ? token.vTokensInBondingCurve / 1e6 : token.vTokensInBondingCurve);
     }
 
-    const slippageMultiplier = 1 + (Math.max(0, this.config.slippagePercent) / 100);
+    const slippageMultiplier = 1 + (Math.max(0, actualSlippage) / 100);
     const fillPriceSol = Math.max(0.00000001, estimatedPriceSol * slippageMultiplier);
     const tokenAmount = solAmount / fillPriceSol;
 
@@ -132,6 +140,8 @@ export class PaperTrader {
   public async simulateSell(signal: ExitSignal, devPubkey?: string): Promise<void> {
     const position = this.positions.get(signal.mint);
     if (!position || position.status !== 'OPEN') return;
+
+    position.status = 'CLOSING';
 
     const clampedRatio = Math.max(0.01, Math.min(1.0, signal.sellRatio));
     const tokensToSell = position.tokenAmount * clampedRatio;
