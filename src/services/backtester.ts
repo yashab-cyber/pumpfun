@@ -25,6 +25,9 @@ export class Backtester {
     tp1Percent: number = 50,
     stopLossPercent: number = -20
   ): Promise<BacktestResult> {
+    const safeInitial = Math.max(0.001, initialBalanceSol);
+    const safeTradeSize = Math.max(0.0005, tradeSizeSol);
+
     const trades: DBTrade[] = await this.memory.getAllTrades();
     if (!trades || trades.length === 0) {
       return {
@@ -36,12 +39,12 @@ export class Backtester {
         maxDrawdownPercent: 0,
         optimalTp1Percent: tp1Percent,
         optimalStopLossPercent: stopLossPercent,
-        equityCurve: [{ tradeIndex: 0, balance: initialBalanceSol }]
+        equityCurve: [{ tradeIndex: 0, balance: safeInitial }]
       };
     }
 
-    let balance = initialBalanceSol;
-    let peakBalance = initialBalanceSol;
+    let balance = safeInitial;
+    let peakBalance = safeInitial;
     let maxDrawdown = 0;
     let grossProfit = 0;
     let grossLoss = 0;
@@ -50,8 +53,16 @@ export class Backtester {
     const returns: number[] = [];
 
     trades.forEach((t: DBTrade, i: number) => {
-      const normalizedPnlSol = (t.pnlPercent / 100) * tradeSizeSol;
-      balance += normalizedPnlSol;
+      // Simulate trade with parameter sensitivity
+      let simulatedPnlPct = t.pnlPercent;
+      if (t.pnlPercent >= tp1Percent) {
+        simulatedPnlPct = tp1Percent;
+      } else if (t.pnlPercent <= stopLossPercent) {
+        simulatedPnlPct = stopLossPercent;
+      }
+
+      const normalizedPnlSol = (simulatedPnlPct / 100) * safeTradeSize;
+      balance = Math.max(0, balance + normalizedPnlSol);
       returns.push(normalizedPnlSol);
 
       if (normalizedPnlSol > 0) {
@@ -70,7 +81,7 @@ export class Backtester {
 
     const winRate = trades.length > 0 ? (wins / trades.length) * 100 : 0;
     const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? 10 : 0;
-    const netPnlSol = balance - initialBalanceSol;
+    const netPnlSol = balance - safeInitial;
 
     const avgReturn = returns.reduce((a, b) => a + b, 0) / (returns.length || 1);
     const variance = returns.reduce((a, b) => a + Math.pow(b - avgReturn, 2), 0) / (returns.length || 1);
