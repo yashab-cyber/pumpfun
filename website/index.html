@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pump.fun Quantum Pro // Autonomous AI Trading Agent for Solana</title>
+  <meta name="description" content="Next-Gen Institutional Autonomous AI Trading Agent for Pump.fun on Solana. Features MEV Sandwich Guard, Multi-Model AI Brain, Cyclical Profit Vault, Jito Multi-Region MEV, and Raydium Auto-Router.">
+  
+  <!-- Open Graph / Meta -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yashab-cyber.github.io/pumpfun/">
+  <meta property="og:title" content="Pump.fun Quantum Pro // Autonomous AI Trading Agent">
+  <meta property="og:description" content="Institutional-grade AI algorithmic trading engine for Pump.fun on Solana. Multi-Model Chain-of-Thought reasoning, Jito MEV private bundles, and Cyclical Profit Vault.">
+  <meta property="twitter:card" content="summary_large_image">
+
+  <!-- Tailwind & Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    
+    :root {
+      --bg-base: #030712;
+      --card-bg: rgba(15, 23, 42, 0.7);
+      --border-color: rgba(30, 41, 59, 0.8);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-base);
+      color: #e2e8f0;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(236, 72, 153, 0.05) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6);
+    }
+
+    .glass-card-interactive {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-card-interactive:hover {
+      border-color: rgba(6, 182, 212, 0.5);
+      transform: translateY(-4px);
+      box-shadow: 0 15px 35px -5px rgba(6, 182, 212, 0.25);
+    }
+
+    .glow-text-cyan {
+      text-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
+    }
+
+    .glow-text-purple {
+      text-shadow: 0 0 20px rgba(168, 85, 247, 0.6);
+    }
+
+    .gradient-border {
+      position: relative;
+      border-radius: 1rem;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.4), rgba(168, 85, 247, 0.4), rgba(16, 185, 129, 0.4));
+      padding: 1px;
+    }
+
+    .gradient-border-inner {
+      background: #090d16;
+      border-radius: calc(1rem - 1px);
+    }
+
+    /* Animated pulse dot */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 0; }
+      100% { transform: scale(0.95); opacity: 0; }
+    }
+    .pulse-ring {
+      animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black">
+
+  <!-- TOP ANNOUNCEMENT BANNER -->
+  <div class="bg-gradient-to-r from-cyan-950 via-purple-950 to-emerald-950 border-b border-cyan-500/20 py-2 px-4 text-center text-xs font-semibold text-gray-300 flex items-center justify-center gap-2">
+    <span class="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[10px] uppercase tracking-wider">v9.5 Titan Live</span>
+    <span>Quantum AI Brain, Jito Multi-Region MEV, and Raydium Auto-Router are active.</span>
+    <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="text-cyan-400 hover:underline flex items-center gap-1">Star on GitHub <i class="fa-solid fa-arrow-right text-[10px]"></i></a>
+  </div>
+
+  <!-- NAVIGATION BAR -->
+  <header class="border-b border-gray-800/80 bg-gray-950/85 backdrop-blur-xl sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-fuchsia-500 flex items-center justify-center text-white font-black text-lg shadow-lg shadow-cyan-500/20">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-base font-extrabold text-white tracking-wider">PUMP.FUN // QUANTUM</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">TITAN v9.5</span>
+          </div>
+          <span class="text-xs text-gray-400">Autonomous Solana AI Trading Engine</span>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-300">
+        <a href="#features" class="hover:text-cyan-400 transition">Features</a>
+        <a href="#live-demo" class="hover:text-cyan-400 transition">Live Terminal</a>
+        <a href="#strategies" class="hover:text-cyan-400 transition">Strategies</a>
+        <a href="#architecture" class="hover:text-cyan-400 transition">Architecture</a>
+        <a href="#quickstart" class="hover:text-cyan-400 transition">Quick Start</a>
+        <a href="#faq" class="hover:text-cyan-400 transition">FAQ</a>
+      </nav>
+
+      <div class="flex items-center space-x-3">
+        <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="px-4 py-2 rounded-xl bg-gray-900 border border-gray-700 hover:border-cyan-400 text-white text-xs font-bold flex items-center gap-2 transition">
+          <i class="fa-brands fa-github text-sm"></i>
+          <span>GitHub</span>
+        </a>
+        <a href="#quickstart" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-cyan-500/25 transition transform hover:scale-105">
+          <i class="fa-solid fa-play"></i>
+          <span>Deploy Agent</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="relative pt-16 pb-20 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 text-center">
+      
+      <!-- Top Tag -->
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-semibold mb-6">
+        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+        Institutional Autonomous Algorithmic Engine for Solana
+      </div>
+
+      <!-- Main Headline -->
+      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6">
+        Autonomous AI Sniping & <br/>
+        <span class="bg-gradient-to-r from-cyan-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent glow-text-cyan">
+          Liquidity Curve Dominance
+        </span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="max-w-3xl mx-auto text-base sm:text-lg text-gray-400 mb-10 leading-relaxed">
+        Engineered with <b>MEV Sandwich Protection</b>, <b>Multi-Model AI Chain-of-Thought Reasoning</b>, <b>Jito Multi-Region Bundles</b>, <b>Raydium Graduation Auto-Routing</b>, and an <b>Automated Profit Vault</b> that locks gains into cold storage.
+      </p>
+
+      <!-- CTA Action Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-4 mb-16">
+        <a href="#quickstart" class="px-7 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold text-sm flex items-center gap-2 shadow-xl shadow-cyan-500/30 transition transform hover:-translate-y-0.5">
+          <i class="fa-solid fa-terminal"></i>
+          <span>Launch Paper Trading</span>
+        </a>
+        <a href="#live-demo" class="px-7 py-3.5 rounded-xl bg-gray-900/90 border border-gray-700 hover:border-cyan-400 text-white font-bold text-sm flex items-center gap-2 backdrop-blur-md transition transform hover:-translate-y-0.5">
+          <i class="fa-solid fa-chart-line text-cyan-400"></i>
+          <span>Explore Live Terminal</span>
+        </a>
+        <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="px-7 py-3.5 rounded-xl bg-gray-950 border border-gray-800 hover:border-purple-400 text-gray-300 font-bold text-sm flex items-center gap-2 transition">
+          <i class="fa-brands fa-github text-purple-400"></i>
+          <span>View Source Code</span>
+        </a>
+      </div>
+
+      <!-- Live Network Metric Badges -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-2xl font-black text-white mono mb-1">0.15s</div>
+          <div class="text-xs text-gray-400">Execution Latency (Jito)</div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-2xl font-black text-cyan-400 mono mb-1">68.4%</div>
+          <div class="text-xs text-gray-400">Backtested Win Rate</div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-2xl font-black text-emerald-400 mono mb-1">100%</div>
+          <div class="text-xs text-gray-400">MEV Frontrun Immunity</div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-2xl font-black text-purple-400 mono mb-1">Multi-LLM</div>
+          <div class="text-xs text-gray-400">Claude, GPT-4o, DeepSeek</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LIVE SIMULATED TERMINAL DEMO -->
+  <section id="live-demo" class="py-16 border-t border-gray-800/80 bg-gray-950/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20 mb-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            LIVE AGENT SIMULATOR
+          </div>
+          <h2 class="text-3xl font-extrabold text-white">Quantum Trading Dashboard UI</h2>
+          <p class="text-sm text-gray-400">This interactive interface runs directly on your local machine at <code>http://localhost:3000</code>.</p>
+        </div>
+
+        <!-- Strategy Hot Swap Pills -->
+        <div class="flex items-center space-x-2 bg-gray-900 p-1.5 rounded-xl border border-gray-800">
+          <span class="text-xs text-gray-400 px-2 font-bold">Active:</span>
+          <button onclick="setSimStrategy('SNIPER')" id="btn-SNIPER" class="px-3 py-1 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">⚡ Sniper</button>
+          <button onclick="setSimStrategy('MIGRATION_KOTH')" id="btn-MIGRATION_KOTH" class="px-3 py-1 rounded-lg text-xs font-bold text-gray-400 hover:text-white">👑 KOTH Raydium</button>
+          <button onclick="setSimStrategy('MOMENTUM_SCALP')" id="btn-MOMENTUM_SCALP" class="px-3 py-1 rounded-lg text-xs font-bold text-gray-400 hover:text-white">📈 Momentum</button>
+        </div>
+      </div>
+
+      <!-- Dashboard Mock Frame -->
+      <div class="gradient-border">
+        <div class="gradient-border-inner p-4 sm:p-6 space-y-6">
+          
+          <!-- Top Telemetry Row -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
+              <span class="text-[11px] text-gray-400 font-bold uppercase">Trading Bankroll</span>
+              <div class="text-2xl font-black text-white mono mt-1" id="simBalance">1.8450 SOL</div>
+              <div class="text-[10px] text-emerald-400 font-bold mt-0.5">+0.8450 SOL Session Gain</div>
+            </div>
+            <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
+              <span class="text-[11px] text-gray-400 font-bold uppercase">Profit Vault (Locked)</span>
+              <div class="text-2xl font-black text-amber-400 mono mt-1">🔒 1.5000 SOL</div>
+              <div class="text-[10px] text-purple-400 font-bold mt-0.5">3 Cycles Completed (~$300)</div>
+            </div>
+            <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
+              <span class="text-[11px] text-gray-400 font-bold uppercase">Win Rate & Trades</span>
+              <div class="text-2xl font-black text-cyan-400 mono mt-1">71.4%</div>
+              <div class="text-[10px] text-gray-400 font-bold mt-0.5">15 Wins / 6 Losses</div>
+            </div>
+            <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
+              <span class="text-[11px] text-gray-400 font-bold uppercase">AI Model Status</span>
+              <div class="text-2xl font-black text-fuchsia-400 mono mt-1">GPT-4o CoT</div>
+              <div class="text-[10px] text-emerald-400 font-bold mt-0.5">Confidence Average: 84%</div>
+            </div>
+          </div>
+
+          <!-- Middle Split: Chart & Active Positions -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Simulated Equity Chart -->
+            <div class="lg:col-span-2 bg-gray-900/80 p-4 rounded-xl border border-gray-800 flex flex-col">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                  <i class="fa-solid fa-chart-line text-cyan-400"></i> Equity Curve & Compounded Bankroll
+                </span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-bold">LIVE TELEMETRY</span>
+              </div>
+              <div class="h-56 relative w-full">
+                <canvas id="simChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Live Active Positions -->
+            <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800 flex flex-col">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                  <i class="fa-solid fa-coins text-amber-400"></i> Open Positions (2)
+                </span>
+                <span class="text-[10px] text-emerald-400 font-bold">Breakeven Locked</span>
+              </div>
+              <div class="space-y-2.5 overflow-y-auto max-h-56 pr-1">
+                <div class="p-2.5 rounded-lg bg-gray-950/80 border border-emerald-500/30 flex items-center justify-between">
+                  <div>
+                    <div class="font-bold text-xs text-white">NEURAL (NeuralAI)</div>
+                    <div class="text-[10px] text-gray-400">Inv: 0.010 SOL | AI: 92%</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xs font-black text-emerald-400">+58.4%</div>
+                    <div class="text-[10px] text-emerald-400">+0.0058 SOL</div>
+                  </div>
+                </div>
+                <div class="p-2.5 rounded-lg bg-gray-950/80 border border-cyan-500/30 flex items-center justify-between">
+                  <div>
+                    <div class="font-bold text-xs text-white">SOLGPT (SolGPT)</div>
+                    <div class="text-[10px] text-gray-400">Inv: 0.012 SOL | AI: 86%</div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-xs font-black text-emerald-400">+22.1%</div>
+                    <div class="text-[10px] text-emerald-400">+0.0026 SOL</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Console Stream -->
+          <div class="bg-black/90 p-4 rounded-xl border border-gray-800 mono text-[11px] text-gray-300 space-y-1 overflow-x-auto max-h-32">
+            <div class="text-cyan-400">[07:05:12] 🚀 [PumpPortal] New token detected: $NEURAL (NeuralAI) | Dev Buy: 1.20 SOL</div>
+            <div class="text-purple-400">[07:05:13] 🧠 [AI Brain] Scored 92/100 (TECH_AI). Narrative: Verified GitHub & docs. Verdict: Asymmetric R/R Entry.</div>
+            <div class="text-emerald-400">[07:05:13] ⚡ [Jito Bundler] Submitted bundle via Frankfurt Block Engine -> Confirmed in block 294819201.</div>
+            <div class="text-amber-400">[07:05:45] 🎯 [Risk Manager] TP1 Triggered (+50%) for $NEURAL -> Sold 50% & Trailing Breakeven Locked at +5%.</div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- DETAILED FEATURE MATRIX SECTION -->
+  <section id="features" class="py-20 max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-bold border border-cyan-500/20 mb-3">
+        QUANTUM ARCHITECTURE MATRIX
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Full-Stack Algorithmic Edge</h2>
+      <p class="text-gray-400 text-sm sm:text-base mt-2">Engineered with defensive risk parameters, neural market scrapers, and institutional on-chain routing.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <!-- Feature 1 -->
+      <div class="glass-card glass-card-interactive p-6 rounded-2xl">
+        <div class="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 flex items-center justify-center text-xl mb-4">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">MEV Sandwich Guard</h3>
+        <p class="text-xs text-gray-400 leading-relaxed mb-4">
+          Calculates instantaneous bonding curve price impact prior to broadcast. If impact exceeds 4.0%, automatically tightens slippage and splits orders to make searcher frontrunning mathematically unprofitable.
+        </p>
+        <span class="text-[10px] font-bold text-cyan-400 font-mono">Anti-MEV Protection Active</span>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="glass-card glass-card-interactive p-6 rounded-2xl">
+        <div class="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center text-xl mb-4">
+          <i class="fa-solid fa-brain"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">Multi-Model AI Brain</h3>
+        <p class="text-xs text-gray-400 leading-relaxed mb-4">
+          Routes token research through GitHub Copilot (`localhost:4141`), Claude 3.5 Sonnet, Gemini 1.5, or local DeepSeek (Ollama) with Dynamic Few-Shot learning and historical SQLite trade memory.
+        </p>
+        <span class="text-[10px] font-bold text-purple-400 font-mono">Chain-of-Thought Reasoning</span>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="glass-card glass-card-interactive p-6 rounded-2xl">
+        <div class="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-xl mb-4">
+          <i class="fa-solid fa-vault"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">Cyclical Profit Vault</h3>
+        <p class="text-xs text-gray-400 leading-relaxed mb-4">
+          Protects gains with the $1 to $100 sweeping algorithm. When profits hit the milestone threshold, gains are instantly locked into cold storage, and the trading seed resets to baseline for the next cycle.
+        </p>
+        <span class="text-[10px] font-bold text-emerald-400 font-mono">100% Capital Preservation</span>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="glass-card glass-card-interactive p-6 rounded-2xl">
+        <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-xl mb-4">
+          <i class="fa-solid fa-arrows-split-up-and-left"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">Raydium & Jupiter Router</h3>
+        <p class="text-xs text-gray-400 leading-relaxed mb-4">
+          Never gets stuck on bonded tokens. Upon graduation to Raydium (100% curve), the router automatically executes token exits through Raydium CPMM pools or Jupiter V6 aggregation with quote caching.
+        </p>
+        <span class="text-[10px] font-bold text-amber-400 font-mono">Post-Graduation Liquidity</span>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="glass-card glass-card-interactive p-6 rounded-2xl">
+        <div class="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-500/40 text-blue-400 flex items-center justify-center text-xl mb-4">
+          <i class="fa-solid fa-bolt-lightning"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">Jito Multi-Region MEV</h3>
+        <p class="text-xs text-gray-400 leading-relaxed mb-4">
+          Broadcasts transactions concurrently across Frankfurt, Amsterdam, New York, and Tokyo Jito block engines using <code>Promise.any</code> racing to guarantee inclusion in the very next block.
+        </p>
+        <span class="text-[10px] font-bold text-blue-400 font-mono">Private Mempool Routing</span>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="glass-card glass-card-interactive p-6 rounded-2xl">
+        <div class="w-12 h-12 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-xl mb-4">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2">Interactive Telegram Bot</h3>
+        <p class="text-xs text-gray-400 leading-relaxed mb-4">
+          Manage your trading bot remotely from your phone. Send <code>/status</code>, <code>/positions</code>, <code>/vault</code>, <code>/strategy</code>, or trigger <code>/panic</code> to immediately liquidate all open positions into SOL.
+        </p>
+        <span class="text-[10px] font-bold text-rose-400 font-mono">Long-Polling Controller</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- INTERACTIVE CONFIG GENERATOR -->
+  <section id="config-gen" class="py-16 border-t border-gray-800/80 bg-gray-950/80">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6">
+      
+      <div class="text-center mb-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-bold border border-cyan-500/20 mb-2">
+          INTERACTIVE CONFIGURATOR
+        </div>
+        <h2 class="text-3xl font-extrabold text-white">Generate Your <code>.env</code> Configuration</h2>
+        <p class="text-xs sm:text-sm text-gray-400">Select your preferences below to instantly copy your custom configuration file.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-900/90 p-6 rounded-2xl border border-gray-800">
+        
+        <!-- Controls -->
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs font-bold text-gray-300 block mb-1">Trading Mode</label>
+            <select id="cfgMode" onchange="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs font-bold text-cyan-400 outline-none">
+              <option value="paper">🧪 Paper Trading (Simulation - Safe)</option>
+              <option value="live">💰 Live Mainnet (Real SOL Execution)</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-bold text-gray-300 block mb-1">Size / Trade (SOL)</label>
+              <input type="number" id="cfgTradeSize" value="0.01" step="0.005" oninput="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white mono outline-none">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-300 block mb-1">AI Provider</label>
+              <select id="cfgAi" onchange="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs font-bold text-purple-400 outline-none">
+                <option value="copilot">GitHub Copilot (Local)</option>
+                <option value="anthropic">Claude 3.5 Sonnet</option>
+                <option value="gemini">Google Gemini 1.5</option>
+                <option value="ollama">DeepSeek R1 (Ollama)</option>
+                <option value="builtin">Built-in Neural Engine</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-bold text-gray-300 block mb-1">Take Profit 1 (%)</label>
+              <input type="number" id="cfgTp1" value="50" oninput="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs text-emerald-400 mono outline-none">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-gray-300 block mb-1">Stop Loss (%)</label>
+              <input type="number" id="cfgSl" value="-20" oninput="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs text-red-400 mono outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="text-xs font-bold text-gray-300 block mb-1">Vault Threshold (SOL Milestone)</label>
+            <input type="number" id="cfgVault" value="0.50" step="0.1" oninput="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs text-amber-400 mono outline-none">
+          </div>
+        </div>
+
+        <!-- Output Codebox -->
+        <div class="flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-gray-400 uppercase">Generated <code>.env</code> file:</span>
+            <button onclick="copyEnv()" class="px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border border-cyan-500/30 text-xs font-bold flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-copy"></i>
+              <span id="copyBtnText">Copy Config</span>
+            </button>
+          </div>
+          <pre id="envOutput" class="bg-black/90 p-4 rounded-xl border border-gray-800 mono text-[11px] text-gray-300 overflow-x-auto h-52 flex-1"></pre>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- QUICKSTART SECTION -->
+  <section id="quickstart" class="py-20 max-w-5xl mx-auto px-4 sm:px-6">
+    <div class="text-center mb-12">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20 mb-2">
+        DEPLOYMENT GUIDE
+      </div>
+      <h2 class="text-3xl font-extrabold text-white">Get Started in 60 Seconds</h2>
+      <p class="text-xs sm:text-sm text-gray-400">Run the trading agent locally on Linux, macOS, or Windows.</p>
+    </div>
+
+    <div class="space-y-4">
+      
+      <!-- Step 1 -->
+      <div class="glass-card p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start space-x-3">
+          <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs flex-shrink-0">1</div>
+          <div>
+            <h4 class="text-sm font-bold text-white">Clone Repository & Install Dependencies</h4>
+            <p class="text-xs text-gray-400">Download the source code and install the required Solana & web3 libraries.</p>
+          </div>
+        </div>
+        <div class="bg-black/90 px-4 py-2.5 rounded-xl border border-gray-800 mono text-xs text-cyan-400 flex items-center justify-between sm:w-80">
+          <code>git clone https://github.com/yashab-cyber/pumpfun.git && cd pumpfun && npm i</code>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="glass-card p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start space-x-3">
+          <div class="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs flex-shrink-0">2</div>
+          <div>
+            <h4 class="text-sm font-bold text-white">Build TypeScript Binaries</h4>
+            <p class="text-xs text-gray-400">Compile TypeScript into production artifacts and copy public UI assets.</p>
+          </div>
+        </div>
+        <div class="bg-black/90 px-4 py-2.5 rounded-xl border border-gray-800 mono text-xs text-purple-400 flex items-center justify-between sm:w-80">
+          <code>npm run build</code>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="glass-card p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start space-x-3">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs flex-shrink-0">3</div>
+          <div>
+            <h4 class="text-sm font-bold text-white">Launch Paper or Live Mode</h4>
+            <p class="text-xs text-gray-400">Run zero-risk simulation or start autonomous on-chain execution.</p>
+          </div>
+        </div>
+        <div class="bg-black/90 px-4 py-2.5 rounded-xl border border-gray-800 mono text-xs text-emerald-400 flex items-center justify-between sm:w-80">
+          <code>npm run paper</code>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FAQ SECTION -->
+  <section id="faq" class="py-16 border-t border-gray-800/80 bg-gray-950/60">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-extrabold text-white">Frequently Asked Questions</h2>
+        <p class="text-xs sm:text-sm text-gray-400 mt-1">Everything you need to know about the Quantum trading agent.</p>
+      </div>
+
+      <div class="space-y-4">
+        <div class="glass-card p-5 rounded-2xl">
+          <h4 class="text-sm font-bold text-white mb-1">What is Paper Trading Mode?</h4>
+          <p class="text-xs text-gray-400 leading-relaxed">
+            Paper trading connects directly to live Solana WebSocket price feeds and simulates trade entries, dynamic risk management, and profit milestones with virtual SOL, ensuring zero financial risk while testing strategies.
+          </p>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl">
+          <h4 class="text-sm font-bold text-white mb-1">How does Jito MEV protection work?</h4>
+          <p class="text-xs text-gray-400 leading-relaxed">
+            Transactions are submitted directly to Jito Block Engines across 5 global regions as private bundles with a dynamic tip instruction, completely bypassing the public mempool to make sandwich attacks impossible.
+          </p>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl">
+          <h4 class="text-sm font-bold text-white mb-1">Which AI models are supported?</h4>
+          <p class="text-xs text-gray-400 leading-relaxed">
+            The AI Brain supports GitHub Copilot (via local proxy at <code>http://localhost:4141</code>), Claude 3.5 Sonnet, Google Gemini 1.5, DeepSeek R1 (via local Ollama), OpenAI GPT-4o, and an offline built-in neural heuristics engine.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-gray-800/80 bg-black/90 py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-purple-500 flex items-center justify-center text-white font-black text-sm">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <span class="text-xs font-extrabold text-white tracking-wider">PUMP.FUN // QUANTUM TITAN v9.5</span>
+      </div>
+      
+      <p class="text-xs text-gray-500 text-center">
+        Distributed under the MIT License • Built with ❤️ for the Solana Trading Community
+      </p>
+
+      <div class="flex items-center space-x-4 text-gray-400 text-sm">
+        <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="hover:text-cyan-400 transition"><i class="fa-brands fa-github"></i></a>
+        <a href="https://solana.com" target="_blank" class="hover:text-purple-400 transition"><i class="fa-solid fa-cube"></i></a>
+        <a href="https://pump.fun" target="_blank" class="hover:text-emerald-400 transition"><i class="fa-solid fa-rocket"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // 1. Interactive Equity Chart Simulator
+    let simChart = null;
+    function initSimChart() {
+      const ctx = document.getElementById('simChart').getContext('2d');
+      simChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['07:00', '07:01', '07:02', '07:03', '07:04', '07:05', '07:06', '07:07', '07:08'],
+          datasets: [{
+            label: 'Bankroll (SOL)',
+            data: [1.000, 1.045, 1.032, 1.150, 1.280, 1.260, 1.490, 1.620, 1.845],
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.12)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 4,
+            pointBackgroundColor: '#06b6d4'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }
+          }
+        }
+      });
+    }
+
+    // 2. Strategy Switcher
+    function setSimStrategy(strat) {
+      ['SNIPER', 'MIGRATION_KOTH', 'MOMENTUM_SCALP'].forEach(s => {
+        const btn = document.getElementById('btn-' + s);
+        if (s === strat) {
+          btn.className = 'px-3 py-1 rounded-lg text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30';
+        } else {
+          btn.className = 'px-3 py-1 rounded-lg text-xs font-bold text-gray-400 hover:text-white';
+        }
+      });
+    }
+
+    // 3. Env Config Generator
+    function generateEnv() {
+      const mode = document.getElementById('cfgMode').value;
+      const size = document.getElementById('cfgTradeSize').value || '0.01';
+      const ai = document.getElementById('cfgAi').value;
+      const tp1 = document.getElementById('cfgTp1').value || '50';
+      const sl = document.getElementById('cfgSl').value || '-20';
+      const vault = document.getElementById('cfgVault').value || '0.50';
+
+      const content = 
+`# Solana Network Configuration
+RPC_URL=https://api.mainnet-beta.solana.com
+SOLANA_PRIVATE_KEY=your_base58_private_key_here
+
+# Trading Mode & Active Strategy
+TRADING_MODE=${mode}
+ACTIVE_STRATEGY=SNIPER
+
+# Risk & Bankroll Management
+SOL_PER_TRADE=${size}
+TAKE_PROFIT_1_PERCENT=${tp1}
+TAKE_PROFIT_2_PERCENT=100
+STOP_LOSS_PERCENT=${sl}
+TRAILING_STOP_TRIGGER_PERCENT=30
+SLIPPAGE_PERCENT=15
+PRIORITY_FEE_SOL=0.001
+
+# Profit Vault Milestones ($1 to $100 Sweep)
+BASE_BANKROLL_SOL=0.01
+PROFIT_VAULT_THRESHOLD_SOL=${vault}
+VAULT_DESTINATION_ADDRESS=your_cold_storage_address_here
+
+# AI Brain Configuration
+AI_PROVIDER=${ai}
+COPILOT_ENDPOINT=http://localhost:4141/v1/chat/completions`;
+
+      document.getElementById('envOutput').textContent = content;
+    }
+
+    function copyEnv() {
+      const text = document.getElementById('envOutput').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyBtnText');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy Config'; }, 2000);
+      });
+    }
+
+    window.onload = () => {
+      initSimChart();
+      generateEnv();
+    };
+  </script>
+</body>
+</html>
