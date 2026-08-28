@@ -1,11 +1,12 @@
 import axios from 'axios';
 import chalk from 'chalk';
-import { Keypair, PublicKey, SystemProgram, Transaction, VersionedTransaction } from '@solana/web3.js';
+import { PublicKey, SystemProgram } from '@solana/web3.js';
 
 export interface JitoBundleResult {
   success: boolean;
   bundleId?: string;
   error?: string;
+  endpointUsed?: string;
 }
 
 export class JitoBundler {
@@ -42,28 +43,29 @@ export class JitoBundler {
   }
 
   public static async submitBundle(serializedTransactions: string[]): Promise<JitoBundleResult> {
-    const endpoint = JitoBundler.JITO_ENDPOINTS[0];
-    try {
-      const response = await axios.post(
-        endpoint,
-        {
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'sendBundle',
-          params: [serializedTransactions]
-        },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          timeout: 4000
-        }
-      );
+    const payload = {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'sendBundle',
+      params: [serializedTransactions]
+    };
 
-      if (response.data && response.data.result) {
-        return { success: true, bundleId: response.data.result };
+    // Parallel broadcast across multi-region Jito Block Engines for lowest latency inclusion
+    const requests = JitoBundler.JITO_ENDPOINTS.map(endpoint =>
+      axios.post(endpoint, payload, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 3500
+      }).then(res => ({ endpoint, data: res.data }))
+    );
+
+    try {
+      const fastest = await Promise.any(requests);
+      if (fastest.data && fastest.data.result) {
+        return { success: true, bundleId: fastest.data.result, endpointUsed: fastest.endpoint };
       }
-      return { success: false, error: JSON.stringify(response.data.error || 'Bundle dropped') };
+      return { success: false, error: JSON.stringify(fastest.data?.error || 'Bundle dropped') };
     } catch (err: any) {
-      return { success: false, error: err.message };
+      return { success: false, error: err.message || 'All Jito endpoints timed out' };
     }
   }
 }

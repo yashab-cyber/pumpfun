@@ -1,6 +1,6 @@
 import axios from 'axios';
 import chalk from 'chalk';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Connection } from '@solana/web3.js';
 
 export interface RaydiumPoolInfo {
   mint: string;
@@ -14,6 +14,7 @@ export interface RaydiumPoolInfo {
 export class RaydiumRouter {
   private jupiterQuoteApi: string = 'https://quote-api.jup.ag/v6';
   private connection: Connection;
+  private quoteCache: Map<string, { data: any; timestamp: number }> = new Map();
 
   constructor(connection: Connection) {
     this.connection = connection;
@@ -23,6 +24,11 @@ export class RaydiumRouter {
    * Check if token has completed graduation and is tradeable on Raydium/Jupiter
    */
   public async checkRaydiumGraduation(mint: string): Promise<RaydiumPoolInfo> {
+    const cached = this.quoteCache.get(`grad_${mint}`);
+    if (cached && (Date.now() - cached.timestamp) < 5000) {
+      return cached.data;
+    }
+
     try {
       const response = await axios.get(`${this.jupiterQuoteApi}/quote`, {
         params: {
@@ -31,15 +37,17 @@ export class RaydiumRouter {
           amount: 10000000, // 0.01 SOL
           slippageBps: 1500
         },
-        timeout: 4000
+        timeout: 3500
       });
 
       if (response.data && response.data.outAmount) {
-        return {
+        const result: RaydiumPoolInfo = {
           mint,
           isMigrated: true,
           raydiumPoolId: response.data.routePlan?.[0]?.swapInfo?.ammKey
         };
+        this.quoteCache.set(`grad_${mint}`, { data: result, timestamp: Date.now() });
+        return result;
       }
       return { mint, isMigrated: false };
     } catch {
@@ -51,6 +59,8 @@ export class RaydiumRouter {
    * Get dynamic exit route for post-migration tokens
    */
   public async getRaydiumSellQuote(mint: string, tokenAmountRaw: number): Promise<{ outSolLamports: number; priceImpactPct: number } | null> {
+    if (!tokenAmountRaw || tokenAmountRaw <= 0) return null;
+
     try {
       const response = await axios.get(`${this.jupiterQuoteApi}/quote`, {
         params: {
@@ -59,7 +69,7 @@ export class RaydiumRouter {
           amount: Math.floor(tokenAmountRaw),
           slippageBps: 1500
         },
-        timeout: 4000
+        timeout: 3500
       });
 
       if (response.data && response.data.outAmount) {
