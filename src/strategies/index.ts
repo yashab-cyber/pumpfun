@@ -28,7 +28,6 @@ export class StrategyManager {
   public evaluateNewToken(token: TokenCreationEvent, viralityScore: number): StrategyDecision {
     switch (this.activeStrategy) {
       case 'SNIPER':
-        // Sniper buys immediately if virality score >= 45 and dev initial buy is safe
         return {
           shouldBuy: viralityScore >= 45,
           reason: `Sniper triggered (Virality: ${viralityScore}/100)`,
@@ -36,7 +35,6 @@ export class StrategyManager {
         };
 
       case 'MIGRATION_KOTH':
-        // Raydium migration strategy ignores initial 0% curve mints until they build progress
         return {
           shouldBuy: false,
           reason: 'Migration strategy waits for bonding curve graduation threshold (65%+)',
@@ -44,7 +42,6 @@ export class StrategyManager {
         };
 
       case 'MOMENTUM_SCALP':
-        // Waits for volume flow
         return {
           shouldBuy: false,
           reason: 'Momentum strategy waits for trade velocity flow',
@@ -64,7 +61,7 @@ export class StrategyManager {
     const now = Date.now();
     const window = this.tradeWindowMap.get(trade.mint) || { count: 0, firstSeen: now, buyVolumeSol: 0 };
 
-    if (now - window.firstSeen < 30000) { // 30 second window
+    if (now - window.firstSeen < 30000) { // 30-second rolling window
       window.count++;
       if (trade.txType === 'buy') {
         const sol = trade.solAmount > 1e6 ? trade.solAmount / 1e9 : trade.solAmount;
@@ -77,6 +74,15 @@ export class StrategyManager {
       window.buyVolumeSol = trade.txType === 'buy' ? sol : 0;
     }
     this.tradeWindowMap.set(trade.mint, window);
+
+    // Periodic map garbage collection to prevent memory leaks
+    if (this.tradeWindowMap.size > 2000) {
+      for (const [mint, data] of this.tradeWindowMap.entries()) {
+        if (now - data.firstSeen > 120000) {
+          this.tradeWindowMap.delete(mint);
+        }
+      }
+    }
 
     // Strategy 1: Migration / KOTH
     if (this.activeStrategy === 'MIGRATION_KOTH') {
