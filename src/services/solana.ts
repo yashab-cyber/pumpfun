@@ -5,6 +5,7 @@ import chalk from 'chalk';
 export class SolanaService {
   private connection: Connection;
   private keypair?: Keypair;
+  private cachedPubkeyString?: string;
 
   constructor(rpcUrl: string, privateKey?: string) {
     this.connection = new Connection(rpcUrl, {
@@ -22,7 +23,8 @@ export class SolanaService {
           const secretKey = bs58.decode(trimmed);
           this.keypair = Keypair.fromSecretKey(secretKey);
         }
-        console.log(chalk.green(`[Solana] Loaded wallet: ${this.keypair.publicKey.toBase58()}`));
+        this.cachedPubkeyString = this.keypair.publicKey.toBase58();
+        console.log(chalk.green(`[Solana] Loaded wallet: ${this.cachedPubkeyString}`));
       } catch (err: any) {
         console.error(chalk.red(`[Solana] Error loading private key: ${err.message}`));
       }
@@ -41,15 +43,25 @@ export class SolanaService {
     return this.keypair?.publicKey;
   }
 
+  public getPublicKeyString(): string {
+    return this.cachedPubkeyString || '';
+  }
+
   public async getBalance(): Promise<number> {
     if (!this.keypair) return 0;
-    try {
-      const lamports = await this.connection.getBalance(this.keypair.publicKey);
-      return lamports / LAMPORTS_PER_SOL;
-    } catch (err: any) {
-      console.error(chalk.yellow(`[Solana] Failed to fetch wallet balance: ${err.message}`));
-      return 0;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const lamports = await this.connection.getBalance(this.keypair.publicKey);
+        return lamports / LAMPORTS_PER_SOL;
+      } catch (err: any) {
+        if (attempt === 3) {
+          console.error(chalk.yellow(`[Solana] Failed to fetch wallet balance after 3 attempts: ${err.message}`));
+          return 0;
+        }
+        await new Promise(r => setTimeout(r, 400 * attempt));
+      }
     }
+    return 0;
   }
 
   public async getBalanceForPubkey(pubkey: PublicKey): Promise<number> {
@@ -58,6 +70,15 @@ export class SolanaService {
       return lamports / LAMPORTS_PER_SOL;
     } catch {
       return 0;
+    }
+  }
+
+  public async isRpcReachable(): Promise<boolean> {
+    try {
+      await this.connection.getSlot();
+      return true;
+    } catch {
+      return false;
     }
   }
 }

@@ -34,6 +34,7 @@ export interface PortfolioAnalytics {
   avgLossSol: number;
   winLossRatio: number;
   expectancySol: number;
+  maxDrawdownPercent: number;
   equityCurve: { timestamp: number; pnl: number; balance: number }[];
 }
 
@@ -43,7 +44,7 @@ export class TradeJournal {
   private initialBalance: number = 1.0;
 
   constructor(initialBalance: number = 1.0) {
-    this.initialBalance = initialBalance;
+    this.initialBalance = Math.max(0.001, initialBalance);
     this.load();
   }
 
@@ -86,16 +87,25 @@ export class TradeJournal {
     let losses = 0;
 
     let cumulativePnl = 0;
+    let peakBalance = this.initialBalance;
+    let maxDrawdownPct = 0;
+
     const equityCurve: { timestamp: number; pnl: number; balance: number }[] = [
       { timestamp: Date.now() - 3600000, pnl: 0, balance: this.initialBalance }
     ];
 
     for (const trade of this.entries) {
       cumulativePnl += trade.pnlSol;
+      const currentBal = this.initialBalance + cumulativePnl;
+      if (currentBal > peakBalance) peakBalance = currentBal;
+
+      const drawdown = peakBalance > 0 ? ((peakBalance - currentBal) / peakBalance) * 100 : 0;
+      if (drawdown > maxDrawdownPct) maxDrawdownPct = drawdown;
+
       equityCurve.push({
         timestamp: trade.exitTimestamp,
-        pnl: cumulativePnl,
-        balance: this.initialBalance + cumulativePnl
+        pnl: Number(cumulativePnl.toFixed(4)),
+        balance: Number(currentBal.toFixed(4))
       });
 
       if (trade.pnlSol > 0) {
@@ -108,26 +118,27 @@ export class TradeJournal {
     }
 
     const totalTrades = this.entries.length;
-    const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
-    const avgWin = wins > 0 ? grossProfit / wins : 0;
-    const avgLoss = losses > 0 ? grossLoss / losses : 0;
-    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? 999 : 0;
-    const winLossRatio = avgLoss > 0 ? avgWin / avgLoss : 0;
-    const expectancy = totalTrades > 0 ? cumulativePnl / totalTrades : 0;
+    const winRate = totalTrades > 0 ? Number(((wins / totalTrades) * 100).toFixed(1)) : 0;
+    const avgWin = wins > 0 ? Number((grossProfit / wins).toFixed(4)) : 0;
+    const avgLoss = losses > 0 ? Number((grossLoss / losses).toFixed(4)) : 0;
+    const profitFactor = grossLoss > 0 ? Number((grossProfit / grossLoss).toFixed(2)) : grossProfit > 0 ? 999 : 0;
+    const winLossRatio = avgLoss > 0 ? Number((avgWin / avgLoss).toFixed(2)) : 0;
+    const expectancy = totalTrades > 0 ? Number((cumulativePnl / totalTrades).toFixed(4)) : 0;
 
     return {
       totalTrades,
       winningTrades: wins,
       losingTrades: losses,
       winRate,
-      grossProfitSol: grossProfit,
-      grossLossSol: grossLoss,
+      grossProfitSol: Number(grossProfit.toFixed(4)),
+      grossLossSol: Number(grossLoss.toFixed(4)),
       profitFactor,
-      netRealizedPnlSol: cumulativePnl,
+      netRealizedPnlSol: Number(cumulativePnl.toFixed(4)),
       avgWinSol: avgWin,
       avgLossSol: avgLoss,
       winLossRatio,
       expectancySol: expectancy,
+      maxDrawdownPercent: Number(maxDrawdownPct.toFixed(1)),
       equityCurve
     };
   }
