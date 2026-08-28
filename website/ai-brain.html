@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Multi-Model AI Brain // Pump.fun Quantum Pro</title>
+  <meta name="description" content="Technical breakdown of the Multi-Model Chain-of-Thought AI Brain and SQLite dynamic few-shot learning.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    :root { --bg-base: #030712; --card-bg: rgba(15, 23, 42, 0.75); --border-color: rgba(30, 41, 59, 0.85); }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-base); color: #e2e8f0; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .glass-card { background: var(--card-bg); border: 1px solid var(--border-color); backdrop-filter: blur(16px); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+  <!-- NAVBAR -->
+  <header class="border-b border-gray-800/80 bg-gray-950/90 backdrop-blur-xl sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <a href="index.html" class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-fuchsia-500 flex items-center justify-center text-white font-black text-sm">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <span class="text-sm font-extrabold text-white tracking-wider">PUMP.FUN // QUANTUM</span>
+      </a>
+      <nav class="hidden md:flex items-center space-x-6 text-xs font-semibold text-gray-300">
+        <a href="index.html" class="hover:text-cyan-400 transition">Overview</a>
+        <a href="strategies.html" class="hover:text-cyan-400 transition">Strategies</a>
+        <a href="mev-security.html" class="hover:text-cyan-400 transition">MEV & Security</a>
+        <a href="ai-brain.html" class="text-cyan-400">AI Brain</a>
+        <a href="profit-vault.html" class="hover:text-cyan-400 transition">Profit Vault</a>
+        <a href="docs.html" class="hover:text-cyan-400 transition">Docs</a>
+      </nav>
+      <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-700 text-white text-xs font-bold flex items-center gap-2">
+        <i class="fa-brands fa-github"></i> <span>GitHub</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-12">
+    
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-bold border border-purple-500/20 mb-3">
+        NEURAL REASONING ARCHITECTURE
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-extrabold text-white">Multi-Model AI Brain Matrix</h1>
+      <p class="text-gray-400 text-sm sm:text-base mt-2">
+        Chain-of-Thought quantitative scoring, IPFS metadata inspection, and dynamic few-shot learning.
+      </p>
+    </div>
+
+    <!-- Multi-Provider Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="glass-card p-5 rounded-2xl">
+        <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold mb-3"><i class="fa-brands fa-github"></i></div>
+        <h3 class="text-sm font-bold text-white mb-1">GitHub Copilot</h3>
+        <p class="text-xs text-gray-400">Local OpenAI-compatible proxy at <code>http://localhost:4141</code>. Unlimited free reasoning.</p>
+      </div>
+      <div class="glass-card p-5 rounded-2xl">
+        <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold mb-3"><i class="fa-solid fa-sparkles"></i></div>
+        <h3 class="text-sm font-bold text-white mb-1">Claude 3.5 Sonnet</h3>
+        <p class="text-xs text-gray-400">Anthropic API integration for deep nuance detection in token metadata and whitepapers.</p>
+      </div>
+      <div class="glass-card p-5 rounded-2xl">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold mb-3"><i class="fa-brands fa-google"></i></div>
+        <h3 class="text-sm font-bold text-white mb-1">Google Gemini 1.5</h3>
+        <p class="text-xs text-gray-400">Ultra-fast multimodal reasoning with large context window for batch token analysis.</p>
+      </div>
+      <div class="glass-card p-5 rounded-2xl">
+        <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold mb-3"><i class="fa-solid fa-server"></i></div>
+        <h3 class="text-sm font-bold text-white mb-1">DeepSeek R1 (Ollama)</h3>
+        <p class="text-xs text-gray-400">100% offline, privacy-first local LLM inference running locally via Ollama.</p>
+      </div>
+    </div>
+
+    <!-- Reasoning Rubric -->
+    <div class="glass-card p-6 sm:p-8 rounded-2xl space-y-4">
+      <h2 class="text-xl font-bold text-white">Chain-of-Thought (CoT) Scoring Framework</h2>
+      <p class="text-xs sm:text-sm text-gray-300 leading-relaxed">
+        Every token passing initial filters is evaluated across 4 quantitative dimensions:
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
+          <span class="text-cyan-400 font-bold uppercase">1. Narrative Meta Alignment (35%)</span>
+          <p class="text-gray-400 mt-1">Evaluates if the token fits active Solana metas (AI, Gaming, DePIN, Viral Memes, Political).</p>
+        </div>
+        <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
+          <span class="text-purple-400 font-bold uppercase">2. Social Verification (25%)</span>
+          <p class="text-gray-400 mt-1">Validates authentic Twitter/X accounts, Telegram groups, and working documentation.</p>
+        </div>
+        <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
+          <span class="text-emerald-400 font-bold uppercase">3. Developer Quality (20%)</span>
+          <p class="text-gray-400 mt-1">Checks dev initial buy size and cross-references historical launches in SQLite memory.</p>
+        </div>
+        <div class="bg-gray-900/80 p-4 rounded-xl border border-gray-800">
+          <span class="text-amber-400 font-bold uppercase">4. Velocity & Microstructure (20%)</span>
+          <p class="text-gray-400 mt-1">Measures early organic buyer count and buys-to-sells transaction ratio.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-gray-800 bg-black/90 py-8 text-center text-xs text-gray-500">
+    <p>Pump.fun Quantum Pro • Distributed under the MIT License • Built for the Solana Community</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>MEV & Security Matrix // Pump.fun Quantum Pro</title>
+  <meta name="description" content="Technical breakdown of MEV sandwich protection, Jito multi-region block engines, and Sybil cluster defense.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    :root { --bg-base: #030712; --card-bg: rgba(15, 23, 42, 0.75); --border-color: rgba(30, 41, 59, 0.85); }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-base); color: #e2e8f0; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .glass-card { background: var(--card-bg); border: 1px solid var(--border-color); backdrop-filter: blur(16px); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+  <!-- NAVBAR -->
+  <header class="border-b border-gray-800/80 bg-gray-950/90 backdrop-blur-xl sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+      <a href="index.html" class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-fuchsia-500 flex items-center justify-center text-white font-black text-sm">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <span class="text-sm font-extrabold text-white tracking-wider">PUMP.FUN // QUANTUM</span>
+      </a>
+      <nav class="hidden md:flex items-center space-x-6 text-xs font-semibold text-gray-300">
+        <a href="index.html" class="hover:text-cyan-400 transition">Overview</a>
+        <a href="strategies.html" class="hover:text-cyan-400 transition">Strategies</a>
+        <a href="mev-security.html" class="text-cyan-400">MEV & Security</a>
+        <a href="ai-brain.html" class="hover:text-cyan-400 transition">AI Brain</a>
+        <a href="profit-vault.html" class="hover:text-cyan-400 transition">Profit Vault</a>
+        <a href="docs.html" class="hover:text-cyan-400 transition">Docs</a>
+      </nav>
+      <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-700 text-white text-xs font-bold flex items-center gap-2">
+        <i class="fa-brands fa-github"></i> <span>GitHub</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-12">
+    
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-xs font-bold border border-cyan-500/20 mb-3">
+        INSTITUTIONAL DEFENSE MATRIX
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-extrabold text-white">MEV & Security Architecture</h1>
+      <p class="text-gray-400 text-sm sm:text-base mt-2">
+        Neutralizing searcher frontrunning, toxic price impact, developer Sybil traps, and stealth liquidity drains.
+      </p>
+    </div>
+
+    <!-- Section 1: Sandwich Guard -->
+    <div class="glass-card p-6 sm:p-8 rounded-2xl space-y-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-lg">🥪</div>
+        <h2 class="text-xl font-bold text-white">1. Pre-Execution Price Impact & Sandwich Guard</h2>
+      </div>
+      <p class="text-xs sm:text-sm text-gray-300 leading-relaxed">
+        Solana memecoin bonding curves operate on constant product AMM mechanics ($k = x \cdot y$). Large trade sizes in shallow curves cause severe price impact, allowing MEV searchers to execute sandwich attacks. Sandwich Guard calculates the impact before submission:
+      </p>
+      <div class="bg-black/80 p-4 rounded-xl border border-gray-800 mono text-xs text-gray-300">
+        $$\text{Price Impact (\%)} = \left(\frac{\Delta SOL}{vSOL_{\text{curve}} + \Delta SOL}\right) \times 100$$
+      </div>
+      <p class="text-xs text-gray-400">
+        • If Price Impact $\ge 4.0\%$: Slippage is automatically clamped from 15% to 5%, and trades are split into micro-orders.
+      </p>
+    </div>
+
+    <!-- Section 2: Jito Multi-Region Bundles -->
+    <div class="glass-card p-6 sm:p-8 rounded-2xl space-y-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-lg">⚡</div>
+        <h2 class="text-xl font-bold text-white">2. Jito Multi-Region Block Engine Racing</h2>
+      </div>
+      <p class="text-xs sm:text-sm text-gray-300 leading-relaxed">
+        Bypasses standard public RPC gossip mempools. The agent packages the swap instruction with a dynamic Jito tip transfer and broadcasts the bundle concurrently via <code>Promise.any</code> to all global Jito Block Engines:
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs mono">
+        <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-800 text-cyan-400">🇩🇪 frankfurt.mainnet.block-engine.jito.wtf</div>
+        <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-800 text-purple-400">🇳🇱 amsterdam.mainnet.block-engine.jito.wtf</div>
+        <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-800 text-emerald-400">🇺🇸 ny.mainnet.block-engine.jito.wtf</div>
+        <div class="bg-gray-900/80 p-3 rounded-xl border border-gray-800 text-amber-400">🇯🇵 tokyo.mainnet.block-engine.jito.wtf</div>
+      </div>
+    </div>
+
+    <!-- Section 3: Sybil Cluster Detection -->
+    <div class="glass-card p-6 sm:p-8 rounded-2xl space-y-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-lg">🔍</div>
+        <h2 class="text-xl font-bold text-white">3. Sybil Multi-Wallet Cluster Detector</h2>
+      </div>
+      <p class="text-xs sm:text-sm text-gray-300 leading-relaxed">
+        Bad actors deploy tokens and immediately buy 20-40% of the supply across 5-10 disguised puppet wallets in Block 0. The Cluster Detector flags:
+      </p>
+      <ul class="text-xs sm:text-sm text-gray-300 space-y-1 list-disc list-inside">
+        <li><b>High-velocity bursts</b>: $\ge 5$ distinct wallets purchasing in under 2 seconds.</li>
+        <li><b>Amount symmetry</b>: Multiple wallets buying identical amounts (e.g. 4 wallets buying exactly 0.250 SOL).</li>
+        <li><b>Volume spikes</b>: More than 8.0 SOL injected within 3 seconds of launch.</li>
+      </ul>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-gray-800 bg-black/90 py-8 text-center text-xs text-gray-500">
+    <p>Pump.fun Quantum Pro • Distributed under the MIT License • Built for the Solana Community</p>
+  </footer>
+</body>
+</html>
