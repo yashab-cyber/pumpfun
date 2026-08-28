@@ -54,6 +54,15 @@ export class WhaleTracker {
     accData.lastSeen = now;
     this.walletBuysMap.set(key, accData);
 
+    // Periodic memory garbage collection
+    if (this.walletBuysMap.size > 1000) {
+      for (const [k, v] of this.walletBuysMap.entries()) {
+        if (now - v.lastSeen > 300000) {
+          this.walletBuysMap.delete(k);
+        }
+      }
+    }
+
     const isRapidAccumulation = accData.count >= 2 && accData.totalSol >= 3.0;
 
     if (isAlpha || isLargeWhale || isRapidAccumulation) {
