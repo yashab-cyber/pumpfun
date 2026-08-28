@@ -6,7 +6,7 @@ export class BondingCurveCalculator {
   public static readonly GRADUATION_SOL_THRESHOLD = 85 * 1e9; // ~85 SOL real needed for Raydium migration
 
   /**
-   * Calculate tokens received for a given SOL amount on the bonding curve
+   * Calculate tokens received for a given SOL amount on the bonding curve using AMM invariant k = vSol * vTokens
    */
   public static getTokensForSol(
     solLamports: number,
@@ -83,6 +83,16 @@ export class BondingCurveCalculator {
     const realSol = Math.max(0, vSolLamports - BondingCurveCalculator.INITIAL_VIRTUAL_SOL);
     const progress = (realSol / BondingCurveCalculator.GRADUATION_SOL_THRESHOLD) * 100;
     return Math.min(100, Math.max(0, progress));
+  }
+
+  /**
+   * Calculate current spot price in SOL from curve reserves
+   */
+  public static calculateSpotPriceSol(vSolLamports: number, vTokenUnits: number): number {
+    if (!vSolLamports || !vTokenUnits || vTokenUnits <= 0) return 0.00000003;
+    const sol = vSolLamports / 1e9;
+    const tokens = vTokenUnits / 1e6;
+    return sol / tokens;
   }
 
   /**
