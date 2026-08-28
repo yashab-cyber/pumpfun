@@ -1,0 +1,48 @@
+{
+  "name": "pumpfun-trading-agent",
+  "version": "2.0.0",
+  "description": "Autonomous Solana Pump.fun Trading Agent with Real-Time Web Dashboard, Anti-Rug Filters, Jito MEV, and Multi-Tier Risk Management",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && mkdir -p dist/public && cp -r src/public/* dist/public/",
+    "start": "ts-node src/index.ts",
+    "paper": "ts-node src/index.ts --mode=paper",
+    "live": "ts-node src/index.ts --mode=live",
+    "test-wallet": "ts-node src/scripts/testWallet.ts"
+  },
+  "keywords": [
+    "solana",
+    "pumpfun",
+    "trading-bot",
+    "agent",
+    "web3",
+    "jito"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@solana/spl-token": "^0.4.8",
+    "@solana/web3.js": "^1.95.8",
+    "axios": "^1.7.9",
+    "bs58": "^6.0.0",
+    "chalk": "^4.1.2",
+    "chart.js": "^4.5.1",
+    "cli-table3": "^0.6.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^6.0.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.2",
+    "@types/sqlite3": "^3.1.11",
+    "@types/ws": "^8.5.13",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}

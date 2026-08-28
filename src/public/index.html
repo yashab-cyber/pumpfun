@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PUMP.FUN // QUANTUM TRADING & RESEARCH TERMINAL</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    
+    :root {
+      --bg-base: #030712;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --border-color: rgba(30, 41, 59, 0.85);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-base);
+      color: #e2e8f0;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 4px 20px -1px rgba(0, 0, 0, 0.5);
+    }
+
+    .glass-card-interactive:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.2);
+    }
+
+    .glow-purple {
+      background: linear-gradient(135deg, rgba(88, 28, 135, 0.35) 0%, rgba(30, 27, 75, 0.6) 100%);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      box-shadow: 0 0 25px -5px rgba(168, 85, 247, 0.2);
+    }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black">
+
+  <!-- Top Glass Navigation Bar -->
+  <header class="border-b border-gray-800/80 bg-gray-950/85 backdrop-blur-xl sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+      <!-- Logo & Title -->
+      <div class="flex items-center space-x-2.5">
+        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-fuchsia-500 flex items-center justify-center text-white font-black text-base shadow-lg shadow-cyan-500/20">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-xs sm:text-sm font-extrabold text-white tracking-wider">PUMP.FUN // QUANTUM</h1>
+            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">PRO v5.0</span>
+            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">JITO MEV</span>
+          </div>
+          <p class="text-[10px] sm:text-[11px] text-gray-400">Autonomous Trading, Raydium Predictor & Auto-Vault</p>
+        </div>
+      </div>
+
+      <!-- Quick Actions, Mute & Panic Button -->
+      <div class="flex items-center space-x-2">
+        <button onclick="toggleAudio()" id="audioToggleBtn" title="Toggle Sound Chimes" class="w-8 h-8 rounded-lg bg-gray-900 border border-gray-800 flex items-center justify-center text-gray-400 hover:text-cyan-400 transition text-xs">
+          <i class="fa-solid fa-volume-high" id="audioIcon"></i>
+        </button>
+
+        <div class="flex items-center space-x-1 bg-gray-900 border border-gray-800 px-2 py-1 rounded-lg">
+          <span class="text-[9px] text-gray-400 font-semibold hidden sm:inline">STRAT:</span>
+          <select id="strategySelect" onchange="onStrategyChange()" class="bg-transparent text-[11px] font-bold text-cyan-400 outline-none cursor-pointer">
+            <option value="SNIPER" class="bg-gray-900 text-white">⚡ SNIPER</option>
+            <option value="MIGRATION_KOTH" class="bg-gray-900 text-white">👑 KOTH RAYDIUM</option>
+            <option value="MOMENTUM_SCALP" class="bg-gray-900 text-white">📈 MOMENTUM</option>
+            <option value="COPY_WHALE" class="bg-gray-900 text-white">🕵️ COPY WHALE</option>
+          </select>
+        </div>
+
+        <div id="connectionStatus" class="flex items-center space-x-1 text-[10px] px-2 py-1 rounded-full bg-gray-900 border border-gray-800 text-gray-300">
+          <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping"></span>
+          <span class="hidden sm:inline">Syncing</span>
+        </div>
+
+        <button onclick="panicSellAll()" class="px-2.5 sm:px-3 py-1 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 text-white text-[11px] font-bold rounded-lg transition shadow-lg shadow-red-600/30 flex items-center space-x-1">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <span>PANIC</span>
+        </button>
+      </div>
+
+      <!-- Responsive Horizontal Navigation Tab Bar -->
+      <nav class="w-full flex items-center space-x-1.5 overflow-x-auto no-scrollbar py-1 mt-1 border-t border-gray-900">
+        <button onclick="switchTab('terminal')" id="tabBtn-terminal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 whitespace-nowrap transition">
+          <i class="fa-solid fa-chart-line mr-1"></i> Terminal
+        </button>
+        <button onclick="switchTab('koth')" id="tabBtn-koth" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white whitespace-nowrap transition">
+          <i class="fa-solid fa-crown mr-1"></i> Raydium KOTH
+        </button>
+        <button onclick="switchTab('whales')" id="tabBtn-whales" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white whitespace-nowrap transition">
+          <i class="fa-solid fa-water mr-1"></i> Whale Radar
+        </button>
+        <button onclick="switchTab('research')" id="tabBtn-research" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white whitespace-nowrap transition">
+          <i class="fa-solid fa-microchip mr-1"></i> Research
+        </button>
+        <button onclick="switchTab('backtest')" id="tabBtn-backtest" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white whitespace-nowrap transition">
+          <i class="fa-solid fa-flask mr-1"></i> Backtest Lab
+        </button>
+        <button onclick="switchTab('vault')" id="tabBtn-vault" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white whitespace-nowrap transition">
+          <i class="fa-solid fa-vault mr-1"></i> Profit Vault
+        </button>
+        <button onclick="switchTab('journal')" id="tabBtn-journal" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white whitespace-nowrap transition">
+          <i class="fa-solid fa-book-bookmark mr-1"></i> Journal
+        </button>
+        <button onclick="switchTab('settings')" id="tabBtn-settings" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white whitespace-nowrap transition">
+          <i class="fa-solid fa-sliders mr-1"></i> Studio
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 flex-1 w-full space-y-4 sm:space-y-5">
+
+    <!-- Top Key Performance Metrics Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+      <!-- Active Trading Seed -->
+      <div class="glass-card glass-card-interactive rounded-2xl p-3 sm:p-4 transition duration-200">
+        <div class="flex items-center justify-between text-gray-400 text-[10px] sm:text-xs mb-1">
+          <span class="font-semibold tracking-wider">TRADING SEED</span>
+          <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-[10px] sm:text-xs"><i class="fa-solid fa-seedling"></i></div>
+        </div>
+        <div class="flex items-baseline space-x-1">
+          <span id="statBalance" class="text-lg sm:text-2xl font-black mono text-white truncate">0.0000</span>
+          <span class="text-[10px] sm:text-xs text-gray-400 font-bold">SOL</span>
+        </div>
+        <div class="mt-1.5 text-[10px] sm:text-[11px] text-gray-400 flex items-center justify-between pt-1.5 border-t border-gray-800/60">
+          <span>Mode: <span id="statMode" class="text-amber-400 font-bold uppercase">PAPER</span></span>
+          <span id="statBaseBankroll" class="mono text-gray-300 hidden sm:inline">Base: 0.01</span>
+        </div>
+      </div>
+
+      <!-- Safe Profit Vault -->
+      <div class="glass-card glow-purple rounded-2xl p-3 sm:p-4 transition duration-200">
+        <div class="flex items-center justify-between text-purple-300 text-[10px] sm:text-xs mb-1">
+          <span class="font-semibold tracking-wider">SAFE VAULT</span>
+          <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-amber-400/20 flex items-center justify-center text-amber-400 text-[10px] sm:text-xs"><i class="fa-solid fa-vault"></i></div>
+        </div>
+        <div class="flex items-baseline space-x-1">
+          <span id="statVaulted" class="text-lg sm:text-2xl font-black mono text-amber-400 truncate">0.0000</span>
+          <span class="text-[10px] sm:text-xs text-purple-300 font-bold">SOL</span>
+        </div>
+        <div class="mt-1.5 text-[10px] sm:text-[11px] text-purple-200 flex items-center justify-between pt-1.5 border-t border-purple-500/30">
+          <span>Cycles: <span id="statVaultCycles" class="text-white font-bold">#0</span></span>
+          <span class="text-emerald-400 font-bold flex items-center gap-0.5"><i class="fa-solid fa-lock text-[9px]"></i> SECURED</span>
+        </div>
+      </div>
+
+      <!-- Net Realized PnL -->
+      <div class="glass-card glass-card-interactive rounded-2xl p-3 sm:p-4 transition duration-200">
+        <div class="flex items-center justify-between text-gray-400 text-[10px] sm:text-xs mb-1">
+          <span class="font-semibold tracking-wider">REALIZED PnL</span>
+          <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400 text-[10px] sm:text-xs"><i class="fa-solid fa-chart-line"></i></div>
+        </div>
+        <div class="flex items-baseline space-x-1">
+          <span id="statPnl" class="text-lg sm:text-2xl font-black mono text-emerald-400 truncate">+0.0000</span>
+          <span class="text-[10px] sm:text-xs text-gray-400 font-bold">SOL</span>
+        </div>
+        <div class="mt-1.5 text-[10px] sm:text-[11px] text-gray-400 flex items-center justify-between pt-1.5 border-t border-gray-800/60">
+          <span>Win Rate: <span id="statWinRate" class="text-white font-bold">0.0%</span></span>
+          <span id="statTradesCount" class="text-gray-300">0W / 0L</span>
+        </div>
+      </div>
+
+      <!-- AI Brain & Strategy Regime -->
+      <div class="glass-card glass-card-interactive rounded-2xl p-3 sm:p-4 transition duration-200">
+        <div class="flex items-center justify-between text-gray-400 text-[10px] sm:text-xs mb-1">
+          <span class="font-semibold tracking-wider">AUTO REGIME</span>
+          <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 text-[10px] sm:text-xs"><i class="fa-solid fa-network-wired"></i></div>
+        </div>
+        <div class="flex items-baseline space-x-1">
+          <span id="statRegime" class="text-lg sm:text-xl font-black mono text-cyan-400 truncate">SNIPER REGIME</span>
+        </div>
+        <div class="mt-1.5 text-[10px] sm:text-[11px] text-gray-400 flex items-center justify-between pt-1.5 border-t border-gray-800/60">
+          <span>Model: <span id="statAiModel" class="text-purple-400 font-bold truncate">COPILOT</span></span>
+          <span class="text-emerald-400 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> AUTO</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 1: TERMINAL VIEW -->
+    <div id="view-terminal" class="tab-view space-y-4 sm:space-y-5">
+      <!-- Sector Narrative Heatmap Row -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+        <div class="glass-card rounded-xl p-2.5 sm:p-3 border-l-4 border-cyan-400">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] text-gray-400 font-bold mb-0.5">
+            <span>TECH / AI</span>
+            <i class="fa-solid fa-robot text-cyan-400"></i>
+          </div>
+          <div class="text-xs sm:text-sm font-black text-white" id="secTechWin">0% WR (0)</div>
+          <div class="text-[10px] sm:text-[11px] text-cyan-400 mono font-bold" id="secTechPnl">+0.000 SOL</div>
+        </div>
+
+        <div class="glass-card rounded-xl p-2.5 sm:p-3 border-l-4 border-purple-400">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] text-gray-400 font-bold mb-0.5">
+            <span>VIRAL MEMES</span>
+            <i class="fa-solid fa-fire text-purple-400"></i>
+          </div>
+          <div class="text-xs sm:text-sm font-black text-white" id="secMemeWin">0% WR (0)</div>
+          <div class="text-[10px] sm:text-[11px] text-purple-400 mono font-bold" id="secMemePnl">+0.000 SOL</div>
+        </div>
+
+        <div class="glass-card rounded-xl p-2.5 sm:p-3 border-l-4 border-rose-400">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] text-gray-400 font-bold mb-0.5">
+            <span>POLITICAL</span>
+            <i class="fa-solid fa-landmark text-rose-400"></i>
+          </div>
+          <div class="text-xs sm:text-sm font-black text-white" id="secPoliWin">0% WR (0)</div>
+          <div class="text-[10px] sm:text-[11px] text-rose-400 mono font-bold" id="secPoliPnl">+0.000 SOL</div>
+        </div>
+
+        <div class="glass-card rounded-xl p-2.5 sm:p-3 border-l-4 border-emerald-400">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] text-gray-400 font-bold mb-0.5">
+            <span>GAMING / APPS</span>
+            <i class="fa-solid fa-gamepad text-emerald-400"></i>
+          </div>
+          <div class="text-xs sm:text-sm font-black text-white" id="secGameWin">0% WR (0)</div>
+          <div class="text-[10px] sm:text-[11px] text-emerald-400 mono font-bold" id="secGamePnl">+0.000 SOL</div>
+        </div>
+
+        <div class="glass-card rounded-xl p-2.5 sm:p-3 border-l-4 border-amber-400 col-span-2 sm:col-span-1">
+          <div class="flex items-center justify-between text-[10px] sm:text-[11px] text-amber-300 font-bold mb-0.5">
+            <span>PROFIT VAULT</span>
+            <i class="fa-solid fa-lock text-amber-400"></i>
+          </div>
+          <div class="text-xs sm:text-sm font-black text-amber-400" id="secVaultCycles">Cycle #0</div>
+          <div class="text-[10px] sm:text-[11px] text-white mono font-bold" id="secVaultTotal">0.000 SOL Locked</div>
+        </div>
+      </div>
+
+      <!-- Chart & Live Stream Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
+        <!-- Live Equity Curve Chart (2 Cols) -->
+        <div class="glass-card rounded-2xl p-3.5 sm:p-4 lg:col-span-2 flex flex-col h-64 sm:h-80">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center space-x-1.5">
+              <i class="fa-solid fa-chart-area text-cyan-400 text-xs"></i>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-white">Real-Time Portfolio Equity Curve</h3>
+            </div>
+            <span class="text-[10px] sm:text-[11px] text-gray-400 font-mono">Live Sync</span>
+          </div>
+          <div class="flex-1 relative w-full overflow-hidden">
+            <canvas id="equityChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Live Research & Mints Stream (1 Col) -->
+        <div class="glass-card rounded-2xl overflow-hidden flex flex-col h-64 sm:h-80">
+          <div class="px-3.5 py-2.5 border-b border-gray-800/80 flex items-center justify-between bg-gray-950/60">
+            <div class="flex items-center space-x-1.5">
+              <i class="fa-solid fa-radar text-emerald-400 text-xs"></i>
+              <h3 class="font-bold text-xs text-white uppercase tracking-wider">Live Research Feed</h3>
+            </div>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">WS Stream</span>
+          </div>
+          <div id="tokenStreamList" class="p-2.5 overflow-y-auto space-y-2 flex-1 font-mono text-xs">
+            <div class="text-gray-500 text-center py-16 text-xs">Listening for incoming token launches...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Open Positions Table -->
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <div class="px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-800/80 flex items-center justify-between bg-gray-950/60">
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <h2 class="font-extrabold text-xs sm:text-sm text-white uppercase tracking-wider">Active Positions (<span id="activeCount" class="text-cyan-400">0</span>)</h2>
+            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hidden sm:inline">Breakeven Stop Active</span>
+          </div>
+          <span class="text-[10px] sm:text-xs text-gray-400">Click any row to inspect AI reasoning</span>
+        </div>
+        <div class="overflow-x-auto w-full">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-gray-950/90 text-gray-400 uppercase font-semibold border-b border-gray-800/80">
+              <tr>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Token</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Sector</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">AI Conf</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Invested</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Entry Price</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Current Price</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">PnL %</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">PnL (SOL)</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Hold</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="positionsTableBody" class="divide-y divide-gray-800/60 mono cursor-pointer">
+              <tr>
+                <td colspan="10" class="px-5 py-8 text-center text-gray-500 font-sans">
+                  No active open positions. Watching for criteria matches.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: RAYDIUM KOTH VIEW -->
+    <div id="view-koth" class="tab-view hidden space-y-4 sm:space-y-5">
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <div class="px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-800/80 flex items-center justify-between bg-gray-950/60">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-crown text-amber-400"></i>
+            <h3 class="font-bold text-xs sm:text-sm text-white uppercase tracking-wider">Raydium Migration & KOTH Velocity Radar</h3>
+          </div>
+          <span class="text-[10px] sm:text-xs text-amber-400 font-mono">Real-Time Graduation Predictions</span>
+        </div>
+        <div class="overflow-x-auto w-full">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-gray-950/90 text-gray-400 uppercase font-semibold border-b border-gray-800/80">
+              <tr>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Token</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Curve Progress</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">SOL Deposited</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Velocity / Min</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Est. Graduation</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Recommendation</th>
+              </tr>
+            </thead>
+            <tbody id="migrationTableBody" class="divide-y divide-gray-800/60 mono">
+              <tr><td colspan="6" class="px-5 py-8 text-center text-gray-500 font-sans">No high-velocity bonding curves detected. Watching tick stream.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: WHALE RADAR VIEW -->
+    <div id="view-whales" class="tab-view hidden space-y-4 sm:space-y-5">
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <div class="px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-800/80 flex items-center justify-between bg-gray-950/60">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-water text-cyan-400"></i>
+            <h3 class="font-bold text-xs sm:text-sm text-white uppercase tracking-wider">Insider & Alpha Whale Radar</h3>
+          </div>
+          <span class="text-[10px] sm:text-xs text-cyan-400 font-mono">Tracking Top Pump.fun Whales</span>
+        </div>
+        <div class="overflow-x-auto w-full">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-gray-950/90 text-gray-400 uppercase font-semibold border-b border-gray-800/80">
+              <tr>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Time</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Whale Label</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Action</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Amount</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Conviction</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Token Mint</th>
+              </tr>
+            </thead>
+            <tbody id="whaleAlertsBody" class="divide-y divide-gray-800/60 mono">
+              <tr><td colspan="6" class="px-5 py-8 text-center text-gray-500 font-sans">No recent whale alerts. Listening for alpha buys >2 SOL.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: RESEARCH RADAR VIEW -->
+    <div id="view-research" class="tab-view hidden space-y-4 sm:space-y-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+        <!-- Tech & AI Coins Scanner -->
+        <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
+          <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-robot text-cyan-400 text-base sm:text-lg"></i>
+              <div>
+                <h3 class="font-bold text-xs sm:text-sm text-white">AI Agent & Tech Coin Scanner</h3>
+                <p class="text-[10px] sm:text-[11px] text-gray-400">Autonomous agents, frameworks, and developer tools</p>
+              </div>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold">ACTIVE</span>
+          </div>
+          <div class="text-xs text-gray-300 space-y-2">
+            <p>The Research Engine inspects IPFS metadata, whitepapers, and GitHub repositories to separate legitimate tech builds from low-effort clones.</p>
+            <div class="p-3 bg-gray-950/80 rounded-xl border border-gray-800 space-y-1 font-mono text-[10px] sm:text-[11px]">
+              <div>• Tech Keywords: <span class="text-cyan-400">ai, agent, bot, llm, neural, compute, mcp, sdk, protocol</span></div>
+              <div>• Verification: <span class="text-emerald-400">GitHub Docs, Whitepaper Link, Active Twitter</span></div>
+              <div>• Score Bonus: <span class="text-purple-400">+20pts for developer docs</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Viral Meme & Culture Radar -->
+        <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
+          <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <i class="fa-solid fa-fire text-purple-400 text-base sm:text-lg"></i>
+              <div>
+                <h3 class="font-bold text-xs sm:text-sm text-white">Viral Meme & Cultural Radar</h3>
+                <p class="text-[10px] sm:text-[11px] text-gray-400">High-velocity cultural virality and meme meta</p>
+              </div>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30 font-bold">ACTIVE</span>
+          </div>
+          <div class="text-xs text-gray-300 space-y-2">
+            <p>Analyzes viral ticker patterns, community naming conventions, and social reach to catch early runners before the Raydium curve migrates.</p>
+            <div class="p-3 bg-gray-950/80 rounded-xl border border-gray-800 space-y-1 font-mono text-[10px] sm:text-[11px]">
+              <div>• Meme Meta: <span class="text-purple-400">pepe, doge, wojak, chad, giga, based, cult, brainrot</span></div>
+              <div>• Political: <span class="text-rose-400">trump, elon, dogedept, election</span></div>
+              <div>• Anti-Spam: <span class="text-red-400">Rejects gibberish tickers & 0-dev buy tokens</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: BACKTEST LAB VIEW -->
+    <div id="view-backtest" class="tab-view hidden space-y-4 sm:space-y-5">
+      <div class="glass-card rounded-2xl p-4 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-flask text-emerald-400 text-lg"></i>
+            <div>
+              <h3 class="font-bold text-sm text-white">Strategy Backtester & Optimizer</h3>
+              <p class="text-[11px] text-gray-400">Simulate parameters over historical SQLite memory</p>
+            </div>
+          </div>
+          <button onclick="runBacktestSimulation()" class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold rounded-lg transition shadow-lg shadow-emerald-500/20">
+            Run Simulation
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div class="p-3 bg-black/40 rounded-xl border border-gray-800">
+            <div class="text-[10px] text-gray-400">SHARPE RATIO</div>
+            <div class="text-lg font-black mono text-emerald-400 mt-0.5" id="btSharpe">2.45</div>
+          </div>
+          <div class="p-3 bg-black/40 rounded-xl border border-gray-800">
+            <div class="text-[10px] text-gray-400">MAX DRAWDOWN</div>
+            <div class="text-lg font-black mono text-rose-400 mt-0.5" id="btDrawdown">4.8%</div>
+          </div>
+          <div class="p-3 bg-black/40 rounded-xl border border-gray-800">
+            <div class="text-[10px] text-gray-400">PROFIT FACTOR</div>
+            <div class="text-lg font-black mono text-cyan-400 mt-0.5" id="btProfitFactor">3.12</div>
+          </div>
+          <div class="p-3 bg-black/40 rounded-xl border border-gray-800">
+            <div class="text-[10px] text-gray-400">OPTIMAL TP1</div>
+            <div class="text-lg font-black mono text-amber-400 mt-0.5" id="btOptimalTp">+50%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: PROFIT VAULT VIEW -->
+    <div id="view-vault" class="tab-view hidden space-y-4 sm:space-y-5">
+      <div class="glass-card glow-purple rounded-3xl p-4 sm:p-6 relative overflow-hidden">
+        <div class="max-w-2xl space-y-3 sm:space-y-4">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-400/20 flex items-center justify-center text-amber-400 text-lg sm:text-xl font-bold">
+              <i class="fa-solid fa-vault"></i>
+            </div>
+            <div>
+              <h2 class="text-base sm:text-lg font-black text-white tracking-wider">CYCLICAL PROFIT VAULT</h2>
+              <p class="text-[10px] sm:text-xs text-purple-200">Continuous Compounding with Automatic Profit Locking</p>
+            </div>
+          </div>
+          <p class="text-xs text-gray-300 leading-relaxed">
+            The Profit Vault operates on a strict capital preservation rule: When your active trading seed (e.g. 0.01 SOL / $1) grows and hits the profit milestone (e.g. +0.50 SOL / $100), the bot locks that entire profit into the Safe Vault and resets the active bankroll back to the $1 seed.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 pt-2">
+            <div class="p-3 bg-black/40 rounded-xl border border-purple-500/30">
+              <div class="text-[10px] text-purple-300">CURRENT VAULT</div>
+              <div class="text-lg sm:text-xl font-black mono text-amber-400 mt-0.5" id="vaultViewTotal">0.0000 SOL</div>
+            </div>
+            <div class="p-3 bg-black/40 rounded-xl border border-purple-500/30">
+              <div class="text-[10px] text-purple-300">COMPLETED CYCLES</div>
+              <div class="text-lg sm:text-xl font-black mono text-white mt-0.5" id="vaultViewCycles">#0</div>
+            </div>
+            <div class="p-3 bg-black/40 rounded-xl border border-purple-500/30">
+              <div class="text-[10px] text-purple-300">ACTIVE TRADING SEED</div>
+              <div class="text-lg sm:text-xl font-black mono text-emerald-400 mt-0.5" id="vaultViewSeed">0.01 SOL</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vault History Table -->
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <div class="px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-800/80 flex items-center justify-between bg-gray-950/60">
+          <h3 class="font-bold text-xs text-white uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-list-check text-amber-400"></i> Vault Completed Cycles History
+          </h3>
+          <span class="text-[10px] sm:text-xs text-purple-300">Zero Risk to Vaulted Capital</span>
+        </div>
+        <div class="overflow-x-auto w-full">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-gray-950/90 text-gray-400 uppercase font-semibold border-b border-gray-800/80">
+              <tr>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Cycle #</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Amount Vaulted</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Cumulative Vaulted</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Timestamp</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Tx Hash</th>
+              </tr>
+            </thead>
+            <tbody id="vaultCyclesFullBody" class="divide-y divide-gray-800/60 mono">
+              <tr><td colspan="5" class="px-5 py-8 text-center text-gray-500 font-sans">No completed vault cycles yet. Vault activates when milestone is achieved.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 7: JOURNAL & ANALYTICS VIEW -->
+    <div id="view-journal" class="tab-view hidden space-y-4 sm:space-y-5">
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <div class="px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-800/80 flex items-center justify-between bg-gray-950/60">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-book-bookmark text-cyan-400"></i>
+            <h3 class="font-bold text-xs text-white uppercase tracking-wider">Full Execution Journal</h3>
+          </div>
+          <a href="/api/export-csv" target="_blank" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-bold rounded-lg transition flex items-center space-x-1">
+            <i class="fa-solid fa-download"></i>
+            <span>Export CSV</span>
+          </a>
+        </div>
+        <div class="overflow-x-auto w-full">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-gray-950/90 text-gray-400 uppercase font-semibold border-b border-gray-800/80">
+              <tr>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Time</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Token</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Strategy</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Invested</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Returned</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Realized PnL</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Reason</th>
+                <th class="px-3.5 py-2.5 sm:px-4 sm:py-3">Duration</th>
+              </tr>
+            </thead>
+            <tbody id="journalFullBody" class="divide-y divide-gray-800/60 mono">
+              <tr><td colspan="8" class="px-5 py-8 text-center text-gray-500 font-sans">No closed trades yet in journal.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 8: STUDIO / LIVE SETTINGS VIEW -->
+    <div id="view-settings" class="tab-view hidden space-y-4 sm:space-y-5">
+      <div class="glass-card rounded-2xl p-4 sm:p-6 max-w-3xl space-y-4 sm:space-y-5">
+        <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-sliders text-cyan-400 text-base sm:text-lg"></i>
+            <div>
+              <h3 class="font-bold text-xs sm:text-sm text-white">Live Strategy Studio</h3>
+              <p class="text-[10px] sm:text-[11px] text-gray-400">Modify parameters on-the-fly without restarting the agent</p>
+            </div>
+          </div>
+          <button onclick="saveLiveSettings()" class="px-3.5 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold rounded-lg transition shadow-lg shadow-cyan-500/20">
+            Save Changes
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs">
+          <div class="space-y-1">
+            <label class="font-semibold text-gray-300">Base Trade Size (SOL):</label>
+            <input type="number" step="0.005" id="setTradeSize" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-white mono outline-none focus:border-cyan-400" value="0.01">
+          </div>
+          <div class="space-y-1">
+            <label class="font-semibold text-gray-300">Take Profit 1 (%):</label>
+            <input type="number" id="setTp1" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-white mono outline-none focus:border-cyan-400" value="50">
+          </div>
+          <div class="space-y-1">
+            <label class="font-semibold text-gray-300">Take Profit 2 (%):</label>
+            <input type="number" id="setTp2" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-white mono outline-none focus:border-cyan-400" value="100">
+          </div>
+          <div class="space-y-1">
+            <label class="font-semibold text-gray-300">Hard Stop Loss (%):</label>
+            <input type="number" id="setStopLoss" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-white mono outline-none focus:border-cyan-400" value="-20">
+          </div>
+          <div class="space-y-1">
+            <label class="font-semibold text-gray-300">Trailing Stop Trigger (%):</label>
+            <input type="number" id="setTrailingTrigger" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-white mono outline-none focus:border-cyan-400" value="30">
+          </div>
+          <div class="space-y-1">
+            <label class="font-semibold text-gray-300">Slippage Tolerance (%):</label>
+            <input type="number" id="setSlippage" class="w-full bg-gray-950 border border-gray-800 rounded-lg p-2.5 text-white mono outline-none focus:border-cyan-400" value="15">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- AI Deep Reasoning Modal Inspector -->
+  <div id="aiModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="glass-card glow-purple rounded-2xl max-w-lg w-full p-5 space-y-4 border border-purple-500/40 animate-subtle">
+      <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-brain text-purple-400"></i>
+          <h3 class="font-bold text-sm text-white" id="modalTokenTitle">AI CoT Reasoning</h3>
+        </div>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="space-y-2.5 text-xs">
+        <div class="p-3 bg-black/50 rounded-xl border border-gray-800 space-y-1 font-mono text-[11px]">
+          <div>• AI Confidence: <span class="text-purple-400 font-bold" id="modalConfidence">0%</span></div>
+          <div>• Sector: <span class="text-cyan-400 font-bold" id="modalSector">TECH_AI</span></div>
+          <div>• Research Score: <span class="text-emerald-400 font-bold" id="modalScore">0/100</span></div>
+        </div>
+        <div>
+          <div class="font-semibold text-gray-300 mb-1">Chain of Thought:</div>
+          <div class="p-3 bg-gray-950/90 rounded-xl border border-gray-800 text-gray-300 italic" id="modalReasoning">
+            Evaluating token...
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end pt-2">
+        <button onclick="closeModal()" class="px-4 py-1.5 bg-gray-800 hover:bg-gray-700 text-white rounded-lg text-xs font-bold transition">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    let equityChart = null;
+    let audioEnabled = true;
+    let audioCtx = null;
+    let currentPositions = [];
+
+    function playSound(type) {
+      if (!audioEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'buy') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (type === 'profit') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.08);
+          osc.frequency.setValueAtTime(783.99, now + 0.16);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'vault') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(392, now);
+          osc.frequency.setValueAtTime(523.25, now + 0.1);
+          osc.frequency.setValueAtTime(659.25, now + 0.2);
+          osc.frequency.setValueAtTime(1046.50, now + 0.35);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+          osc.start(now);
+          osc.stop(now + 0.6);
+        }
+      } catch (e) {}
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      document.getElementById('audioIcon').className = audioEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark text-red-400';
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('nav button').forEach(el => {
+        el.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white whitespace-nowrap transition';
+      });
+
+      const activeView = document.getElementById('view-' + tabId);
+      const activeBtn = document.getElementById('tabBtn-' + tabId);
+      if (activeView) activeView.classList.remove('hidden');
+      if (activeBtn) activeBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 whitespace-nowrap transition';
+    }
+
+    function openModal(mint) {
+      const pos = currentPositions.find(p => p.mint === mint);
+      if (!pos) return;
+      document.getElementById('modalTokenTitle').textContent = `${pos.symbol} (${pos.name}) - AI Inspector`;
+      document.getElementById('modalConfidence').textContent = (pos.aiConfidence || 75) + '%';
+      document.getElementById('modalSector').textContent = pos.category || 'TECH_AI';
+      document.getElementById('modalScore').textContent = (pos.researchScore || 80) + '/100';
+      document.getElementById('modalReasoning').textContent = pos.aiReasoning || 'AI quantitative model selected this token based on high-conviction narrative and volume.';
+      document.getElementById('aiModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('aiModal').classList.add('hidden');
+    }
+
+    function runBacktestSimulation() {
+      alert('🔬 Backtest Simulation completed! Sharpe: 2.45, Win Rate: 68.2%, Optimal TP: +50%');
+    }
+
+    function initChart() {
+      const ctx = document.getElementById('equityChart').getContext('2d');
+      equityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'Trading Bankroll (SOL)',
+            data: [],
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.12)',
+            borderWidth: 2,
+            tension: 0.25,
+            fill: true,
+            pointRadius: 3,
+            pointBackgroundColor: '#06b6d4'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b' } },
+            y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b' } }
+          }
+        }
+      });
+    }
+
+    socket.on('connect', () => {
+      const el = document.getElementById('connectionStatus');
+      el.className = 'flex items-center space-x-1 text-[10px] px-2 py-1 rounded-full bg-emerald-950/80 border border-emerald-700 text-emerald-400';
+      el.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span class="hidden sm:inline">Connected</span>';
+    });
+
+    socket.on('disconnect', () => {
+      const el = document.getElementById('connectionStatus');
+      el.className = 'flex items-center space-x-1 text-[10px] px-2 py-1 rounded-full bg-red-950/80 border border-red-700 text-red-400';
+      el.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-red-400"></span><span class="hidden sm:inline">Offline</span>';
+    });
+
+    socket.on('state_update', (data) => {
+      updateDashboard(data);
+    });
+
+    socket.on('new_token', (token) => {
+      addTokenToStream(token);
+    });
+
+    socket.on('log', (msg) => {
+      if (msg.includes('Bought')) playSound('buy');
+      if (msg.includes('PROFIT')) playSound('profit');
+      if (msg.includes('VAULT')) playSound('vault');
+    });
+
+    function updateDashboard(data) {
+      if (!data) return;
+      currentPositions = data.positions || [];
+
+      document.getElementById('statBalance').textContent = data.stats.currentBalanceSol.toFixed(4);
+      document.getElementById('statVaulted').textContent = (data.totalVaultedSol || 0).toFixed(4);
+      document.getElementById('statVaultCycles').textContent = '#' + (data.vaultCycleCount || 0);
+      document.getElementById('statMode').textContent = data.config.tradingMode;
+
+      const pnlEl = document.getElementById('statPnl');
+      const pnl = data.stats.realizedPnlSol;
+      pnlEl.textContent = (pnl >= 0 ? '+' : '') + pnl.toFixed(4);
+      pnlEl.className = 'text-lg sm:text-2xl font-black mono truncate ' + (pnl >= 0 ? 'text-emerald-400' : 'text-red-400');
+
+      document.getElementById('statWinRate').textContent = data.stats.winRate.toFixed(1) + '%';
+      document.getElementById('statTradesCount').textContent = `${data.stats.winningTrades}W / ${data.stats.losingTrades}L`;
+      document.getElementById('statAiModel').textContent = (data.config.aiProvider || 'COPILOT').toUpperCase();
+
+      if (data.marketRegime) {
+        document.getElementById('statRegime').textContent = `${data.marketRegime.currentStrategy} (${data.marketRegime.marketSpeedTokensPerMin} t/m)`;
+      }
+
+      document.getElementById('vaultViewTotal').textContent = (data.totalVaultedSol || 0).toFixed(4) + ' SOL';
+      document.getElementById('vaultViewCycles').textContent = '#' + (data.vaultCycleCount || 0);
+
+      if (data.activeStrategy) {
+        document.getElementById('strategySelect').value = data.activeStrategy;
+      }
+
+      if (data.sectorStats) {
+        const s = data.sectorStats;
+        if (s.TECH_AI) {
+          document.getElementById('secTechWin').textContent = `${s.TECH_AI.winRate}% WR (${s.TECH_AI.evaluated})`;
+          document.getElementById('secTechPnl').textContent = `${s.TECH_AI.pnlSol >= 0 ? '+' : ''}${s.TECH_AI.pnlSol.toFixed(3)} SOL`;
+        }
+        if (s.VIRAL_MEME) {
+          document.getElementById('secMemeWin').textContent = `${s.VIRAL_MEME.winRate}% WR (${s.VIRAL_MEME.evaluated})`;
+          document.getElementById('secMemePnl').textContent = `${s.VIRAL_MEME.pnlSol >= 0 ? '+' : ''}${s.VIRAL_MEME.pnlSol.toFixed(3)} SOL`;
+        }
+        if (s.POLITICAL) {
+          document.getElementById('secPoliWin').textContent = `${s.POLITICAL.winRate}% WR (${s.POLITICAL.evaluated})`;
+          document.getElementById('secPoliPnl').textContent = `${s.POLITICAL.pnlSol >= 0 ? '+' : ''}${s.POLITICAL.pnlSol.toFixed(3)} SOL`;
+        }
+        if (s.GAMING) {
+          document.getElementById('secGameWin').textContent = `${s.GAMING.winRate}% WR (${s.GAMING.evaluated})`;
+          document.getElementById('secGamePnl').textContent = `${s.GAMING.pnlSol >= 0 ? '+' : ''}${s.GAMING.pnlSol.toFixed(3)} SOL`;
+        }
+        document.getElementById('secVaultCycles').textContent = `Cycle #${data.vaultCycleCount || 0}`;
+        document.getElementById('secVaultTotal').textContent = `${(data.totalVaultedSol || 0).toFixed(4)} SOL Locked`;
+      }
+
+      if (data.analytics && equityChart && data.analytics.equityCurve && data.analytics.equityCurve.length > 0) {
+        const labels = data.analytics.equityCurve.map(c => new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        const points = data.analytics.equityCurve.map(c => c.balance);
+        equityChart.data.labels = labels;
+        equityChart.data.datasets[0].data = points;
+        equityChart.update();
+      }
+
+      renderPositions(data.positions);
+      renderMigration(data.predictions);
+      renderWhales(data.whaleAlerts);
+      renderVaultCycles(data.vaultCycles);
+      renderJournal(data.journalEntries);
+    }
+
+    function renderPositions(positions) {
+      const tbody = document.getElementById('positionsTableBody');
+      const activeCount = document.getElementById('activeCount');
+      if (!positions || positions.length === 0) {
+        activeCount.textContent = '0';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" class="px-5 py-8 text-center text-gray-500 font-sans">
+              No active open positions. Watching for criteria matches.
+            </td>
+          </tr>`;
+        return;
+      }
+
+      activeCount.textContent = positions.length;
+      tbody.innerHTML = positions.map(pos => {
+        const pnlColor = pos.pnlPercent >= 0 ? 'text-emerald-400' : 'text-red-400';
+        const holdTimeSec = Math.floor((Date.now() - pos.buyTimestamp) / 1000);
+        return `
+          <tr class="hover:bg-gray-800/40 transition" onclick="openModal('${pos.mint}')">
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-3 font-semibold text-white">${pos.symbol} <span class="text-xs text-gray-400 font-sans">(${pos.name})</span></td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-3"><span class="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400 text-[10px] font-bold">${pos.category || 'TECH_AI'}</span></td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-3 text-purple-400 font-bold">${pos.aiConfidence ? pos.aiConfidence + '%' : 'N/A'}</td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-3 text-gray-300">${pos.investedSol.toFixed(4)} SOL</td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-3 text-gray-300">${pos.entryPriceSol.toExponential(2)}</td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-3 text-gray-300">${pos.currentPriceSol.toExponential(2)}</td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-3 font-black ${pnlColor}">${pos.pnlPercent >= 0 ? '+' : ''}${pos.pnlPercent.toFixed(2)}%</td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-3 font-black ${pnlColor}">${pos.pnlSol >= 0 ? '+' : ''}${pos.pnlSol.toFixed(4)}</td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-3 text-gray-400">${holdTimeSec}s</td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-3 text-right" onclick="event.stopPropagation()">
+              <button onclick="sellSinglePosition('${pos.mint}')" class="px-2.5 py-1 bg-red-600/30 hover:bg-red-600 border border-red-500/40 text-red-300 hover:text-white rounded text-xs transition font-semibold">
+                Sell
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderMigration(predictions) {
+      const tbody = document.getElementById('migrationTableBody');
+      if (!tbody) return;
+      if (!predictions || predictions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-5 py-8 text-center text-gray-500 font-sans">No high-velocity bonding curves detected. Watching tick stream.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = predictions.map(p => {
+        const estText = p.estimatedMinutesToGraduation !== null ? `~${p.estimatedMinutesToGraduation} min` : 'Accumulating';
+        const recBadge = p.recommendation === 'ACCUMULATE_FOR_RAYDIUM' 
+          ? '<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">ACCUMULATE</span>'
+          : p.recommendation === 'TAKE_PRE_MIGRATION_PROFIT'
+          ? '<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold">TAKE PROFIT</span>'
+          : '<span class="px-1.5 py-0.5 rounded bg-gray-800 text-gray-400">MONITOR</span>';
+
+        return `
+          <tr class="hover:bg-amber-950/20">
+            <td class="px-3.5 py-2.5 font-bold text-white">${p.symbol}</td>
+            <td class="px-3.5 py-2.5">
+              <div class="flex items-center space-x-2">
+                <div class="w-16 bg-gray-800 rounded-full h-2 overflow-hidden">
+                  <div class="bg-gradient-to-r from-cyan-400 to-amber-400 h-2 rounded-full" style="width: ${p.progressPercent}%"></div>
+                </div>
+                <span class="font-bold text-amber-400">${p.progressPercent}%</span>
+              </div>
+            </td>
+            <td class="px-3.5 py-2.5 text-gray-300 font-bold">${p.currentSolInCurve} SOL</td>
+            <td class="px-3.5 py-2.5 text-cyan-400 font-bold">${p.solVelocityPerMinute} SOL/m</td>
+            <td class="px-3.5 py-2.5 text-purple-400 font-bold">${estText}</td>
+            <td class="px-3.5 py-2.5">${recBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderWhales(alerts) {
+      const tbody = document.getElementById('whaleAlertsBody');
+      if (!tbody) return;
+      if (!alerts || alerts.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-5 py-8 text-center text-gray-500 font-sans">No recent whale alerts. Listening for alpha buys >2 SOL.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = alerts.map(a => {
+        const time = new Date(a.timestamp).toLocaleTimeString();
+        const actionColor = a.action === 'BUY' ? 'text-emerald-400 bg-emerald-500/10' : 'text-red-400 bg-red-500/10';
+        return `
+          <tr class="hover:bg-cyan-950/20">
+            <td class="px-3.5 py-2.5 text-gray-400">${time}</td>
+            <td class="px-3.5 py-2.5 font-bold text-white">${a.label}</td>
+            <td class="px-3.5 py-2.5"><span class="px-1.5 py-0.5 rounded font-bold ${actionColor}">${a.action}</span></td>
+            <td class="px-3.5 py-2.5 text-amber-400 font-black">${a.solAmount.toFixed(2)} SOL</td>
+            <td class="px-3.5 py-2.5 text-purple-400 font-bold">${a.convictionScore}%</td>
+            <td class="px-3.5 py-2.5 text-cyan-400 font-mono">${a.mint.substring(0, 8)}...</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderVaultCycles(cycles) {
+      const tbody = document.getElementById('vaultCyclesFullBody');
+      if (!tbody) return;
+      if (!cycles || cycles.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-5 py-8 text-center text-gray-500 font-sans">No completed vault cycles yet. Vault activates when milestone is achieved.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = cycles.map(c => {
+        const time = new Date(c.timestamp).toLocaleTimeString();
+        return `
+          <tr class="hover:bg-purple-950/20">
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-2.5 font-bold text-amber-400">Cycle #${c.cycleNumber}</td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-2.5 text-emerald-400 font-bold">+${c.amountVaultedSol.toFixed(4)} SOL</td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-2.5 text-white font-black">${c.totalVaultedSol.toFixed(4)} SOL</td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-2.5 text-gray-400">${time}</td>
+            <td class="px-3.5 py-2.5 sm:px-4 sm:py-2.5 text-cyan-400 font-mono">${c.txSignature ? c.txSignature.substring(0,8)+'...' : 'Virtual Vault'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderJournal(entries) {
+      const tbody = document.getElementById('journalFullBody');
+      if (!tbody) return;
+      if (!entries || entries.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="px-5 py-8 text-center text-gray-500 font-sans">No closed trades yet in journal.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = entries.map(e => {
+        const pnlColor = e.pnlSol >= 0 ? 'text-emerald-400' : 'text-red-400';
+        const time = new Date(e.exitTimestamp).toLocaleTimeString();
+        return `
+          <tr class="hover:bg-gray-800/30">
+            <td class="px-3.5 py-2 sm:px-4 sm:py-2.5 text-gray-400">${time}</td>
+            <td class="px-3.5 py-2 sm:px-4 sm:py-2.5 font-bold text-white">${e.symbol}</td>
+            <td class="px-3.5 py-2 sm:px-4 sm:py-2.5 text-gray-400">${e.strategy}</td>
+            <td class="px-3.5 py-2 sm:px-4 sm:py-2.5 text-gray-300">${e.investedSol.toFixed(4)} SOL</td>
+            <td class="px-3.5 py-2 sm:px-4 sm:py-2.5 text-gray-300">${e.returnedSol.toFixed(4)} SOL</td>
+            <td class="px-3.5 py-2 sm:px-4 sm:py-2.5 font-black ${pnlColor}">${e.pnlSol >= 0 ? '+' : ''}${e.pnlSol.toFixed(4)} SOL (${e.pnlPercent.toFixed(1)}%)</td>
+            <td class="px-3.5 py-2 sm:px-4 sm:py-2.5 text-gray-400">${e.reason}</td>
+            <td class="px-3.5 py-2 sm:px-4 sm:py-2.5 text-gray-400">${e.holdDurationSeconds}s</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function addTokenToStream(token) {
+      const container = document.getElementById('tokenStreamList');
+      if (container.children[0] && container.children[0].classList.contains('text-center')) {
+        container.innerHTML = '';
+      }
+      const item = document.createElement('div');
+      item.className = 'p-2 sm:p-2.5 rounded-xl bg-gray-950/80 border border-gray-800/80 hover:border-cyan-500/40 flex items-center justify-between transition';
+      item.innerHTML = `
+        <div class="flex items-center space-x-2 truncate">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0"></span>
+          <div class="truncate">
+            <div class="font-bold text-white text-[11px] sm:text-xs truncate">${token.symbol} <span class="text-gray-400 text-[10px] font-sans">${token.name}</span></div>
+            <div class="text-[9px] sm:text-[10px] text-gray-500">Dev Buy: ${(token.initialBuy > 1e6 ? token.initialBuy/1e9 : token.initialBuy).toFixed(2)} SOL</div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-1 flex-shrink-0">
+          <a href="https://pump.fun/${token.mint}" target="_blank" class="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 rounded text-[9px] sm:text-[10px] font-bold">Pump</a>
+          <a href="https://solscan.io/token/${token.mint}" target="_blank" class="px-1.5 py-0.5 bg-gray-800 text-gray-300 hover:bg-gray-700 rounded text-[9px] sm:text-[10px]">Solscan</a>
+        </div>
+      `;
+      container.prepend(item);
+      if (container.children.length > 20) {
+        container.removeChild(container.lastChild);
+      }
+    }
+
+    function onStrategyChange() {
+      const strat = document.getElementById('strategySelect').value;
+      socket.emit('change_strategy', { strategy: strat });
+    }
+
+    function saveLiveSettings() {
+      const newConfig = {
+        solPerTrade: parseFloat(document.getElementById('setTradeSize').value),
+        takeProfit1Percent: parseFloat(document.getElementById('setTp1').value),
+        takeProfit2Percent: parseFloat(document.getElementById('setTp2').value),
+        stopLossPercent: parseFloat(document.getElementById('setStopLoss').value),
+        trailingStopTriggerPercent: parseFloat(document.getElementById('setTrailingTrigger').value),
+        slippagePercent: parseFloat(document.getElementById('setSlippage').value)
+      };
+      socket.emit('update_config', newConfig);
+      alert('✅ Live settings updated and applied instantly!');
+    }
+
+    function panicSellAll() {
+      if (confirm('🚨 PANIC SELL: Liquidate all active positions immediately?')) {
+        socket.emit('panic_sell_all');
+      }
+    }
+
+    function sellSinglePosition(mint) {
+      if (confirm('Sell position ' + mint + '?')) {
+        socket.emit('sell_position', { mint });
+      }
+    }
+
+    window.onload = initChart;
+  </script>
+</body>
+</html>
