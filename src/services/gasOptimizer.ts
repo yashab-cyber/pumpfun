@@ -27,16 +27,20 @@ export class GasOptimizer {
         const nonZero = fees.map(f => f.prioritizationFee).filter(f => f > 0);
         if (nonZero.length > 0) {
           nonZero.sort((a, b) => a - b);
-          // Pick 75th percentile for fast inclusion
+          // Pick 75th percentile for rapid block inclusion
           const p75Idx = Math.floor(nonZero.length * 0.75);
-          this.cachedFeeMicroLamports = Math.max(25000, nonZero[p75Idx]);
+          const rawP75 = nonZero[p75Idx];
+
+          // Clamp between safe bounds (10,000 to 1,500,000 micro-lamports)
+          this.cachedFeeMicroLamports = Math.max(10000, Math.min(1500000, rawP75));
           this.lastFetchTime = now;
         }
       }
     } catch {
-      // Fall back to cached fee
+      // Fall back safely to cached fee
     }
 
-    return Math.floor(this.cachedFeeMicroLamports * multiplier);
+    const calculated = Math.floor(this.cachedFeeMicroLamports * multiplier);
+    return Math.max(10000, Math.min(2000000, calculated));
   }
 }

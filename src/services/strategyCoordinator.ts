@@ -14,6 +14,8 @@ export class StrategyCoordinator {
   private activeStrategy: StrategyType = 'SNIPER';
   private autoSwitchEnabled: boolean = true;
   private tokenLaunchesTimestamps: number[] = [];
+  private pendingRecommendation: StrategyType | null = null;
+  private pendingRecommendationCount: number = 0;
 
   constructor(initialStrategy: StrategyType = 'SNIPER', autoSwitch: boolean = true) {
     this.activeStrategy = initialStrategy;
@@ -47,7 +49,15 @@ export class StrategyCoordinator {
       reason = 'High-performing sniper regime with favorable dev quality.';
     }
 
-    if (this.autoSwitchEnabled && recommended !== this.activeStrategy) {
+    // Hysteresis filter: Require 3 consecutive recommendation ticks before auto-switching
+    if (recommended === this.pendingRecommendation) {
+      this.pendingRecommendationCount++;
+    } else {
+      this.pendingRecommendation = recommended;
+      this.pendingRecommendationCount = 1;
+    }
+
+    if (this.autoSwitchEnabled && recommended !== this.activeStrategy && this.pendingRecommendationCount >= 3) {
       console.log(
         chalk.cyan.bold(
           `\n[Strategy Coordinator] 🔄 AUTO-SWITCHING STRATEGY: ${this.activeStrategy} ➔ ${recommended}\n` +
@@ -55,6 +65,7 @@ export class StrategyCoordinator {
         )
       );
       this.activeStrategy = recommended;
+      this.pendingRecommendationCount = 0;
     }
 
     return {
@@ -73,6 +84,7 @@ export class StrategyCoordinator {
 
   public setActiveStrategy(strat: StrategyType): void {
     this.activeStrategy = strat;
+    this.pendingRecommendationCount = 0;
   }
 
   public toggleAutoSwitch(enabled: boolean): void {
