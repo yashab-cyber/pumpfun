@@ -17,6 +17,13 @@
 </head>
 <body class="min-h-screen flex flex-col antialiased">
 
+  <!-- TOP ANNOUNCEMENT BANNER -->
+  <div class="bg-gradient-to-r from-cyan-950 via-purple-950 to-emerald-950 border-b border-cyan-500/20 py-2 px-3 sm:px-4 text-center text-xs font-semibold text-gray-300 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+    <span class="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[9px] sm:text-[10px] uppercase tracking-wider font-bold">v9.5 Titan Live</span>
+    <span class="text-[11px] sm:text-xs">Quantum AI Brain, Jito Multi-Region MEV, and Raydium Router.</span>
+    <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="text-cyan-400 hover:underline flex items-center gap-1 text-[11px] sm:text-xs font-bold">Star on GitHub <i class="fa-solid fa-arrow-right text-[10px]"></i></a>
+  </div>
+
   <!-- NAVBAR -->
   <header class="border-b border-gray-800/80 bg-gray-950/90 backdrop-blur-xl sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -26,17 +33,32 @@
         </div>
         <span class="text-sm font-extrabold text-white tracking-wider">PUMP.FUN // QUANTUM</span>
       </a>
-      <nav class="hidden md:flex items-center space-x-6 text-xs font-semibold text-gray-300">
+      <nav class="hidden lg:flex items-center space-x-6 text-xs font-semibold text-gray-300">
         <a href="index.html" class="hover:text-cyan-400 transition">Overview</a>
         <a href="strategies.html" class="hover:text-cyan-400 transition">Strategies</a>
         <a href="mev-security.html" class="text-cyan-400">MEV & Security</a>
         <a href="ai-brain.html" class="hover:text-cyan-400 transition">AI Brain</a>
         <a href="profit-vault.html" class="hover:text-cyan-400 transition">Profit Vault</a>
-        <a href="docs.html" class="hover:text-cyan-400 transition">Docs</a>
+        <a href="docs.html" class="hover:text-cyan-400 transition">Docs & Setup</a>
       </nav>
-      <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-700 text-white text-xs font-bold flex items-center gap-2">
-        <i class="fa-brands fa-github"></i> <span>GitHub</span>
-      </a>
+      <div class="flex items-center space-x-3">
+        <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="px-3 py-1.5 rounded-xl bg-gray-900 border border-gray-700 text-white text-xs font-bold flex items-center gap-2">
+          <i class="fa-brands fa-github"></i> <span class="hidden sm:inline">GitHub</span>
+        </a>
+        <button onclick="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg bg-gray-900 border border-gray-800 text-gray-400 hover:text-white text-sm">
+          <i class="fa-solid fa-bars" id="menuIcon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Drawer Menu -->
+    <div id="mobileMenu" class="hidden lg:hidden border-t border-gray-800 bg-gray-950 px-4 py-4 space-y-3">
+      <a href="index.html" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Overview</a>
+      <a href="strategies.html" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Trading Strategies</a>
+      <a href="mev-security.html" class="block text-sm font-semibold text-cyan-400 py-1">MEV & Security Architecture</a>
+      <a href="ai-brain.html" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Multi-Model AI Brain</a>
+      <a href="profit-vault.html" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Cyclical Profit Vault</a>
+      <a href="docs.html" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Developer Docs & Setup</a>
     </div>
   </header>
 
@@ -103,11 +125,43 @@
       </ul>
     </div>
 
+    <!-- INTERCONNECTED PREVIOUS / NEXT CHAPTER CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-gray-800">
+      <a href="strategies.html" class="glass-card p-4 rounded-xl hover:border-cyan-400 transition flex items-center justify-between group">
+        <div>
+          <span class="text-[10px] text-gray-500 uppercase font-bold">← Previous</span>
+          <div class="text-sm font-bold text-white group-hover:text-cyan-400 transition">Trading Strategies Spec</div>
+        </div>
+        <i class="fa-solid fa-arrow-left text-xs text-gray-500 group-hover:text-cyan-400 transition"></i>
+      </a>
+      <a href="ai-brain.html" class="glass-card p-4 rounded-xl hover:border-cyan-400 transition flex items-center justify-between group text-right">
+        <div>
+          <span class="text-[10px] text-gray-500 uppercase font-bold">Next Chapter →</span>
+          <div class="text-sm font-bold text-white group-hover:text-cyan-400 transition">Multi-Model AI Brain</div>
+        </div>
+        <i class="fa-solid fa-arrow-right text-xs text-gray-500 group-hover:text-cyan-400 transition"></i>
+      </a>
+    </div>
+
   </main>
 
   <!-- FOOTER -->
   <footer class="border-t border-gray-800 bg-black/90 py-8 text-center text-xs text-gray-500">
     <p>Pump.fun Quantum Pro • Distributed under the MIT License • Built for the Solana Community</p>
   </footer>
+
+  <script>
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobileMenu');
+      const icon = document.getElementById('menuIcon');
+      if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        icon.className = 'fa-solid fa-xmark';
+      } else {
+        menu.classList.add('hidden');
+        icon.className = 'fa-solid fa-bars';
+      }
+    }
+  </script>
 </body>
 </html>

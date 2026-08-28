@@ -92,12 +92,12 @@
     <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="text-cyan-400 hover:underline flex items-center gap-1 text-[11px] sm:text-xs font-bold">Star on GitHub <i class="fa-solid fa-arrow-right text-[10px]"></i></a>
   </div>
 
-  <!-- NAVIGATION BAR -->
+  <!-- NAVIGATION BAR (INTERCONNECTED) -->
   <header class="border-b border-gray-800/80 bg-gray-950/90 backdrop-blur-xl sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between">
       
       <!-- Brand Logo -->
-      <a href="#" class="flex items-center space-x-2.5 sm:space-x-3">
+      <a href="index.html" class="flex items-center space-x-2.5 sm:space-x-3">
         <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-fuchsia-500 flex items-center justify-center text-white font-black text-base sm:text-lg shadow-lg shadow-cyan-500/20">
           <i class="fa-solid fa-bolt"></i>
         </div>
@@ -111,12 +111,13 @@
       </a>
 
       <!-- Desktop Nav Links -->
-      <nav class="hidden lg:flex items-center space-x-6 text-xs sm:text-sm font-medium text-gray-300">
-        <a href="#features" class="hover:text-cyan-400 transition">Features</a>
-        <a href="#live-demo" class="hover:text-cyan-400 transition">Live Terminal</a>
-        <a href="#config-gen" class="hover:text-cyan-400 transition">Configurator</a>
-        <a href="#quickstart" class="hover:text-cyan-400 transition">Quick Start</a>
-        <a href="#faq" class="hover:text-cyan-400 transition">FAQ</a>
+      <nav class="hidden lg:flex items-center space-x-6 text-xs sm:text-sm font-semibold text-gray-300">
+        <a href="index.html" class="text-cyan-400">Overview</a>
+        <a href="strategies.html" class="hover:text-cyan-400 transition">Strategies</a>
+        <a href="mev-security.html" class="hover:text-cyan-400 transition">MEV & Security</a>
+        <a href="ai-brain.html" class="hover:text-cyan-400 transition">AI Brain</a>
+        <a href="profit-vault.html" class="hover:text-cyan-400 transition">Profit Vault</a>
+        <a href="docs.html" class="hover:text-cyan-400 transition">Docs & Setup</a>
       </nav>
 
       <!-- Action Buttons & Mobile Menu Toggle -->
@@ -136,13 +137,14 @@
 
     </div>
 
-    <!-- Mobile Drawer Menu -->
+    <!-- Mobile Drawer Menu (Interconnected) -->
     <div id="mobileMenu" class="hidden lg:hidden border-t border-gray-800 bg-gray-950 px-4 py-4 space-y-3">
-      <a href="#features" onclick="toggleMobileMenu()" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Features</a>
-      <a href="#live-demo" onclick="toggleMobileMenu()" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Live Terminal Simulator</a>
-      <a href="#config-gen" onclick="toggleMobileMenu()" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">.env Configurator</a>
-      <a href="#quickstart" onclick="toggleMobileMenu()" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Quick Start</a>
-      <a href="#faq" onclick="toggleMobileMenu()" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">FAQ</a>
+      <a href="index.html" onclick="toggleMobileMenu()" class="block text-sm font-semibold text-cyan-400 py-1">Overview</a>
+      <a href="strategies.html" onclick="toggleMobileMenu()" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Trading Strategies</a>
+      <a href="mev-security.html" onclick="toggleMobileMenu()" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">MEV & Security Architecture</a>
+      <a href="ai-brain.html" onclick="toggleMobileMenu()" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Multi-Model AI Brain</a>
+      <a href="profit-vault.html" onclick="toggleMobileMenu()" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Cyclical Profit Vault</a>
+      <a href="docs.html" onclick="toggleMobileMenu()" class="block text-sm font-semibold text-gray-300 hover:text-cyan-400 py-1">Developer Docs & Setup</a>
     </div>
   </header>
 
@@ -177,11 +179,11 @@
         </a>
         <a href="#live-demo" class="w-full sm:w-auto px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl bg-gray-900/90 border border-gray-700 hover:border-cyan-400 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 backdrop-blur-md transition transform hover:-translate-y-0.5">
           <i class="fa-solid fa-chart-line text-cyan-400"></i>
-          <span>Explore Live Terminal</span>
+          <span>Explore Live Simulator</span>
         </a>
-        <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="w-full sm:w-auto px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl bg-gray-950 border border-gray-800 hover:border-purple-400 text-gray-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
-          <i class="fa-brands fa-github text-purple-400"></i>
-          <span>View Source Code</span>
+        <a href="docs.html" class="w-full sm:w-auto px-6 py-3 sm:px-7 sm:py-3.5 rounded-xl bg-gray-950 border border-gray-800 hover:border-purple-400 text-gray-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-book text-purple-400"></i>
+          <span>Read Documentation</span>
         </a>
       </div>
 
@@ -208,18 +210,18 @@
     </div>
   </section>
 
-  <!-- LIVE SIMULATED TERMINAL DEMO -->
+  <!-- LIVE DYNAMIC SIMULATED TERMINAL DEMO -->
   <section id="live-demo" class="py-12 sm:py-16 border-t border-gray-800/80 bg-gray-950/60">
     <div class="max-w-7xl mx-auto px-3 sm:px-6">
       
       <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 sm:mb-8 gap-4">
         <div>
           <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] sm:text-xs font-bold border border-emerald-500/20 mb-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            LIVE AGENT SIMULATOR
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            LIVE REAL-TIME SIMULATOR ACTIVE
           </div>
-          <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Quantum Trading Dashboard UI</h2>
-          <p class="text-xs sm:text-sm text-gray-400 mt-1">This interactive interface runs directly on your local machine at <code>http://localhost:3000</code>.</p>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Interactive Quantum Terminal</h2>
+          <p class="text-xs sm:text-sm text-gray-400 mt-1">Watch live simulated token snipes, AI reasoning scores, and dynamic PnL updates.</p>
         </div>
 
         <!-- Strategy Hot Swap Pills -->
@@ -231,7 +233,7 @@
         </div>
       </div>
 
-      <!-- Dashboard Mock Frame -->
+      <!-- Dashboard Frame -->
       <div class="gradient-border">
         <div class="gradient-border-inner p-3 sm:p-6 space-y-4 sm:space-y-6">
           
@@ -240,81 +242,61 @@
             <div class="bg-gray-900/80 p-3 sm:p-4 rounded-xl border border-gray-800">
               <span class="text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase truncate block">Trading Bankroll</span>
               <div class="text-lg sm:text-2xl font-black text-white mono mt-0.5 sm:mt-1 truncate" id="simBalance">1.8450 SOL</div>
-              <div class="text-[9px] sm:text-[10px] text-emerald-400 font-bold mt-0.5 truncate">+0.8450 SOL (+84.5%)</div>
+              <div class="text-[9px] sm:text-[10px] text-emerald-400 font-bold mt-0.5 truncate" id="simSessionGain">+0.8450 SOL Session Gain</div>
             </div>
             <div class="bg-gray-900/80 p-3 sm:p-4 rounded-xl border border-gray-800">
               <span class="text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase truncate block">Profit Vault (Locked)</span>
-              <div class="text-lg sm:text-2xl font-black text-amber-400 mono mt-0.5 sm:mt-1 truncate">🔒 1.5000 SOL</div>
-              <div class="text-[9px] sm:text-[10px] text-purple-400 font-bold mt-0.5 truncate">3 Cycles (~$300)</div>
+              <div class="text-lg sm:text-2xl font-black text-amber-400 mono mt-0.5 sm:mt-1 truncate" id="simVault">🔒 1.5000 SOL</div>
+              <div class="text-[9px] sm:text-[10px] text-purple-400 font-bold mt-0.5 truncate" id="simVaultCycles">3 Cycles Completed (~$300)</div>
             </div>
             <div class="bg-gray-900/80 p-3 sm:p-4 rounded-xl border border-gray-800">
               <span class="text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase truncate block">Win Rate & Trades</span>
-              <div class="text-lg sm:text-2xl font-black text-cyan-400 mono mt-0.5 sm:mt-1 truncate">71.4%</div>
-              <div class="text-[9px] sm:text-[10px] text-gray-400 font-bold mt-0.5 truncate">15W / 6L (21 Trades)</div>
+              <div class="text-lg sm:text-2xl font-black text-cyan-400 mono mt-0.5 sm:mt-1 truncate" id="simWinRate">71.4%</div>
+              <div class="text-[9px] sm:text-[10px] text-gray-400 font-bold mt-0.5 truncate" id="simTradeCount">15W / 6L (21 Trades)</div>
             </div>
             <div class="bg-gray-900/80 p-3 sm:p-4 rounded-xl border border-gray-800">
               <span class="text-[9px] sm:text-[11px] text-gray-400 font-bold uppercase truncate block">AI Model Status</span>
               <div class="text-lg sm:text-2xl font-black text-fuchsia-400 mono mt-0.5 sm:mt-1 truncate">GPT-4o CoT</div>
-              <div class="text-[9px] sm:text-[10px] text-emerald-400 font-bold mt-0.5 truncate">Avg Confidence: 84%</div>
+              <div class="text-[9px] sm:text-[10px] text-emerald-400 font-bold mt-0.5 truncate" id="simAiConf">Avg Confidence: 88%</div>
             </div>
           </div>
 
           <!-- Middle Split: Chart & Active Positions -->
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             
-            <!-- Simulated Equity Chart -->
+            <!-- Real-Time Dynamic Equity Chart -->
             <div class="lg:col-span-2 bg-gray-900/80 p-3 sm:p-4 rounded-xl border border-gray-800 flex flex-col">
               <div class="flex items-center justify-between mb-2 sm:mb-3">
                 <span class="text-[11px] sm:text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5 sm:gap-2">
-                  <i class="fa-solid fa-chart-line text-cyan-400"></i> Equity Curve & Compounded Bankroll
+                  <i class="fa-solid fa-chart-line text-cyan-400"></i> Dynamic Equity Curve (Live Ticking)
                 </span>
-                <span class="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-400 font-bold">LIVE TELEMETRY</span>
+                <span class="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
+                </span>
               </div>
               <div class="h-44 sm:h-56 relative w-full">
                 <canvas id="simChart"></canvas>
               </div>
             </div>
 
-            <!-- Live Active Positions -->
+            <!-- Real-Time Active Positions -->
             <div class="bg-gray-900/80 p-3 sm:p-4 rounded-xl border border-gray-800 flex flex-col">
               <div class="flex items-center justify-between mb-2 sm:mb-3">
                 <span class="text-[11px] sm:text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5 sm:gap-2">
-                  <i class="fa-solid fa-coins text-amber-400"></i> Open Positions (2)
+                  <i class="fa-solid fa-coins text-amber-400"></i> Active Open Positions
                 </span>
-                <span class="text-[9px] sm:text-[10px] text-emerald-400 font-bold">Breakeven Locked</span>
+                <span class="text-[9px] sm:text-[10px] text-emerald-400 font-bold" id="posBadge">2 Active</span>
               </div>
-              <div class="space-y-2 sm:space-y-2.5 overflow-y-auto max-h-44 sm:max-h-56 pr-1">
-                <div class="p-2 sm:p-2.5 rounded-lg bg-gray-950/80 border border-emerald-500/30 flex items-center justify-between gap-2">
-                  <div class="truncate">
-                    <div class="font-bold text-[11px] sm:text-xs text-white truncate">NEURAL (NeuralAI)</div>
-                    <div class="text-[9px] sm:text-[10px] text-gray-400">Inv: 0.010 SOL | AI: 92%</div>
-                  </div>
-                  <div class="text-right flex-shrink-0">
-                    <div class="text-[11px] sm:text-xs font-black text-emerald-400">+58.4%</div>
-                    <div class="text-[9px] sm:text-[10px] text-emerald-400">+0.0058 SOL</div>
-                  </div>
-                </div>
-                <div class="p-2 sm:p-2.5 rounded-lg bg-gray-950/80 border border-cyan-500/30 flex items-center justify-between gap-2">
-                  <div class="truncate">
-                    <div class="font-bold text-[11px] sm:text-xs text-white truncate">SOLGPT (SolGPT)</div>
-                    <div class="text-[9px] sm:text-[10px] text-gray-400">Inv: 0.012 SOL | AI: 86%</div>
-                  </div>
-                  <div class="text-right flex-shrink-0">
-                    <div class="text-[11px] sm:text-xs font-black text-emerald-400">+22.1%</div>
-                    <div class="text-[9px] sm:text-[10px] text-emerald-400">+0.0026 SOL</div>
-                  </div>
-                </div>
+              <div class="space-y-2 sm:space-y-2.5 overflow-y-auto max-h-44 sm:max-h-56 pr-1" id="simPositionsList">
+                <!-- Dynamically populated -->
               </div>
             </div>
 
           </div>
 
-          <!-- Bottom Console Stream -->
-          <div class="bg-black/90 p-3 sm:p-4 rounded-xl border border-gray-800 mono text-[10px] sm:text-[11px] text-gray-300 space-y-1 overflow-x-auto max-h-28 sm:max-h-32">
-            <div class="text-cyan-400 whitespace-nowrap">[07:05:12] 🚀 [PumpPortal] New token detected: $NEURAL (NeuralAI) | Dev Buy: 1.20 SOL</div>
-            <div class="text-purple-400 whitespace-nowrap">[07:05:13] 🧠 [AI Brain] Scored 92/100 (TECH_AI). Narrative: Verified GitHub & docs. Verdict: Asymmetric R/R Entry.</div>
-            <div class="text-emerald-400 whitespace-nowrap">[07:05:13] ⚡ [Jito Bundler] Submitted bundle via Frankfurt Block Engine -> Confirmed in block 294819201.</div>
-            <div class="text-amber-400 whitespace-nowrap">[07:05:45] 🎯 [Risk Manager] TP1 Triggered (+50%) for $NEURAL -> Sold 50% & Trailing Breakeven Locked at +5%.</div>
+          <!-- Bottom Console Stream (Auto-updating in real-time) -->
+          <div class="bg-black/90 p-3 sm:p-4 rounded-xl border border-gray-800 mono text-[10px] sm:text-[11px] text-gray-300 space-y-1 overflow-x-auto max-h-32" id="simConsole">
+            <!-- Dynamically populated -->
           </div>
 
         </div>
@@ -336,151 +318,94 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       
       <!-- Feature 1 -->
-      <div class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl">
-        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4">
+      <a href="mev-security.html" class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl block group">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4 group-hover:scale-110 transition">
           <i class="fa-solid fa-shield-halved"></i>
         </div>
-        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2">MEV Sandwich Guard</h3>
+        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2 flex items-center justify-between">
+          <span>MEV Sandwich Guard</span>
+          <i class="fa-solid fa-arrow-right text-xs text-gray-500 group-hover:text-cyan-400 transition"></i>
+        </h3>
         <p class="text-xs text-gray-400 leading-relaxed mb-3 sm:mb-4">
           Calculates instantaneous bonding curve price impact prior to broadcast. If impact exceeds 4.0%, automatically tightens slippage and splits orders to make searcher frontrunning mathematically unprofitable.
         </p>
-        <span class="text-[10px] font-bold text-cyan-400 font-mono">Anti-MEV Protection Active</span>
-      </div>
+        <span class="text-[10px] font-bold text-cyan-400 font-mono">Read Technical Spec →</span>
+      </a>
 
       <!-- Feature 2 -->
-      <div class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl">
-        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4">
+      <a href="ai-brain.html" class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl block group">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4 group-hover:scale-110 transition">
           <i class="fa-solid fa-brain"></i>
         </div>
-        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2">Multi-Model AI Brain</h3>
+        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2 flex items-center justify-between">
+          <span>Multi-Model AI Brain</span>
+          <i class="fa-solid fa-arrow-right text-xs text-gray-500 group-hover:text-purple-400 transition"></i>
+        </h3>
         <p class="text-xs text-gray-400 leading-relaxed mb-3 sm:mb-4">
           Routes token research through GitHub Copilot (`localhost:4141`), Claude 3.5 Sonnet, Gemini 1.5, or local DeepSeek (Ollama) with Dynamic Few-Shot learning and historical SQLite trade memory.
         </p>
-        <span class="text-[10px] font-bold text-purple-400 font-mono">Chain-of-Thought Reasoning</span>
-      </div>
+        <span class="text-[10px] font-bold text-purple-400 font-mono">Explore AI Matrix →</span>
+      </a>
 
       <!-- Feature 3 -->
-      <div class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl">
-        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4">
+      <a href="profit-vault.html" class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl block group">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4 group-hover:scale-110 transition">
           <i class="fa-solid fa-vault"></i>
         </div>
-        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2">Cyclical Profit Vault</h3>
+        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2 flex items-center justify-between">
+          <span>Cyclical Profit Vault</span>
+          <i class="fa-solid fa-arrow-right text-xs text-gray-500 group-hover:text-emerald-400 transition"></i>
+        </h3>
         <p class="text-xs text-gray-400 leading-relaxed mb-3 sm:mb-4">
           Protects gains with the $1 to $100 sweeping algorithm. When profits hit the milestone threshold, gains are instantly locked into cold storage, and the trading seed resets to baseline for the next cycle.
         </p>
-        <span class="text-[10px] font-bold text-emerald-400 font-mono">100% Capital Preservation</span>
-      </div>
+        <span class="text-[10px] font-bold text-emerald-400 font-mono">Learn Milestone Sweeper →</span>
+      </a>
 
       <!-- Feature 4 -->
-      <div class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl">
-        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4">
+      <a href="strategies.html" class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl block group">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4 group-hover:scale-110 transition">
           <i class="fa-solid fa-arrows-split-up-and-left"></i>
         </div>
-        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2">Raydium & Jupiter Router</h3>
+        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2 flex items-center justify-between">
+          <span>Raydium & Jupiter Router</span>
+          <i class="fa-solid fa-arrow-right text-xs text-gray-500 group-hover:text-amber-400 transition"></i>
+        </h3>
         <p class="text-xs text-gray-400 leading-relaxed mb-3 sm:mb-4">
           Never gets stuck on bonded tokens. Upon graduation to Raydium (100% curve), the router automatically executes token exits through Raydium CPMM pools or Jupiter V6 aggregation with quote caching.
         </p>
-        <span class="text-[10px] font-bold text-amber-400 font-mono">Post-Graduation Liquidity</span>
-      </div>
+        <span class="text-[10px] font-bold text-amber-400 font-mono">View Routing Engine →</span>
+      </a>
 
       <!-- Feature 5 -->
-      <div class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl">
-        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/20 border border-blue-500/40 text-blue-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4">
+      <a href="mev-security.html" class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl block group">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/20 border border-blue-500/40 text-blue-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4 group-hover:scale-110 transition">
           <i class="fa-solid fa-bolt-lightning"></i>
         </div>
-        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2">Jito Multi-Region MEV</h3>
+        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2 flex items-center justify-between">
+          <span>Jito Multi-Region MEV</span>
+          <i class="fa-solid fa-arrow-right text-xs text-gray-500 group-hover:text-blue-400 transition"></i>
+        </h3>
         <p class="text-xs text-gray-400 leading-relaxed mb-3 sm:mb-4">
           Broadcasts transactions concurrently across Frankfurt, Amsterdam, New York, and Tokyo Jito block engines using <code>Promise.any</code> racing to guarantee inclusion in the very next block.
         </p>
-        <span class="text-[10px] font-bold text-blue-400 font-mono">Private Mempool Routing</span>
-      </div>
+        <span class="text-[10px] font-bold text-blue-400 font-mono">Explore Global Engines →</span>
+      </a>
 
       <!-- Feature 6 -->
-      <div class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl">
-        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4">
+      <a href="docs.html" class="glass-card glass-card-interactive p-5 sm:p-6 rounded-2xl block group">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-lg sm:text-xl mb-3 sm:mb-4 group-hover:scale-110 transition">
           <i class="fa-solid fa-mobile-screen-button"></i>
         </div>
-        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2">Interactive Telegram Bot</h3>
+        <h3 class="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2 flex items-center justify-between">
+          <span>Interactive Telegram Bot</span>
+          <i class="fa-solid fa-arrow-right text-xs text-gray-500 group-hover:text-rose-400 transition"></i>
+        </h3>
         <p class="text-xs text-gray-400 leading-relaxed mb-3 sm:mb-4">
           Manage your trading bot remotely from your phone. Send <code>/status</code>, <code>/positions</code>, <code>/vault</code>, <code>/strategy</code>, or trigger <code>/panic</code> to immediately liquidate all open positions into SOL.
         </p>
-        <span class="text-[10px] font-bold text-rose-400 font-mono">Long-Polling Controller</span>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- INTERACTIVE CONFIG GENERATOR -->
-  <section id="config-gen" class="py-12 sm:py-16 border-t border-gray-800/80 bg-gray-950/80">
-    <div class="max-w-5xl mx-auto px-3 sm:px-6">
-      
-      <div class="text-center mb-8 sm:mb-10">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 text-[10px] sm:text-xs font-bold border border-cyan-500/20 mb-2">
-          INTERACTIVE CONFIGURATOR
-        </div>
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Generate Your <code>.env</code> Configuration</h2>
-        <p class="text-xs sm:text-sm text-gray-400 mt-1">Select your preferences below to instantly copy your custom configuration file.</p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 bg-gray-900/90 p-4 sm:p-6 rounded-2xl border border-gray-800">
-        
-        <!-- Controls -->
-        <div class="space-y-3 sm:space-y-4">
-          <div>
-            <label class="text-[11px] sm:text-xs font-bold text-gray-300 block mb-1">Trading Mode</label>
-            <select id="cfgMode" onchange="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs font-bold text-cyan-400 outline-none">
-              <option value="paper">🧪 Paper Trading (Simulation - Safe)</option>
-              <option value="live">💰 Live Mainnet (Real SOL Execution)</option>
-            </select>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
-            <div>
-              <label class="text-[11px] sm:text-xs font-bold text-gray-300 block mb-1">Size / Trade (SOL)</label>
-              <input type="number" id="cfgTradeSize" value="0.01" step="0.005" oninput="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white mono outline-none">
-            </div>
-            <div>
-              <label class="text-[11px] sm:text-xs font-bold text-gray-300 block mb-1">AI Provider</label>
-              <select id="cfgAi" onchange="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs font-bold text-purple-400 outline-none">
-                <option value="copilot">GitHub Copilot (Local)</option>
-                <option value="anthropic">Claude 3.5 Sonnet</option>
-                <option value="gemini">Google Gemini 1.5</option>
-                <option value="ollama">DeepSeek R1 (Ollama)</option>
-                <option value="builtin">Built-in Neural Engine</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
-            <div>
-              <label class="text-[11px] sm:text-xs font-bold text-gray-300 block mb-1">Take Profit 1 (%)</label>
-              <input type="number" id="cfgTp1" value="50" oninput="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs text-emerald-400 mono outline-none">
-            </div>
-            <div>
-              <label class="text-[11px] sm:text-xs font-bold text-gray-300 block mb-1">Stop Loss (%)</label>
-              <input type="number" id="cfgSl" value="-20" oninput="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs text-red-400 mono outline-none">
-            </div>
-          </div>
-
-          <div>
-            <label class="text-[11px] sm:text-xs font-bold text-gray-300 block mb-1">Vault Threshold (SOL Milestone)</label>
-            <input type="number" id="cfgVault" value="0.50" step="0.1" oninput="generateEnv()" class="w-full bg-gray-950 border border-gray-700 rounded-xl px-3 py-2 text-xs text-amber-400 mono outline-none">
-          </div>
-        </div>
-
-        <!-- Output Codebox -->
-        <div class="flex flex-col justify-between">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-[11px] sm:text-xs font-bold text-gray-400 uppercase">Generated <code>.env</code> file:</span>
-            <button onclick="copyEnv()" class="px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border border-cyan-500/30 text-xs font-bold flex items-center gap-1.5 transition">
-              <i class="fa-solid fa-copy"></i>
-              <span id="copyBtnText">Copy Config</span>
-            </button>
-          </div>
-          <pre id="envOutput" class="bg-black/90 p-3 sm:p-4 rounded-xl border border-gray-800 mono text-[10px] sm:text-[11px] text-gray-300 overflow-x-auto h-44 sm:h-52 flex-1"></pre>
-        </div>
-
-      </div>
+        <span class="text-[10px] font-bold text-rose-400 font-mono">View Command Setup →</span>
+      </a>
 
     </div>
   </section>
@@ -542,62 +467,63 @@
     </div>
   </section>
 
-  <!-- FAQ SECTION -->
-  <section id="faq" class="py-12 sm:py-16 border-t border-gray-800/80 bg-gray-950/60">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6">
-      <div class="text-center mb-8 sm:mb-12">
-        <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Frequently Asked Questions</h2>
-        <p class="text-xs sm:text-sm text-gray-400 mt-1">Everything you need to know about the Quantum trading agent.</p>
-      </div>
-
-      <div class="space-y-3 sm:space-y-4">
-        <div class="glass-card p-4 sm:p-5 rounded-2xl">
-          <h4 class="text-xs sm:text-sm font-bold text-white mb-1">What is Paper Trading Mode?</h4>
-          <p class="text-[11px] sm:text-xs text-gray-400 leading-relaxed">
-            Paper trading connects directly to live Solana WebSocket price feeds and simulates trade entries, dynamic risk management, and profit milestones with virtual SOL, ensuring zero financial risk while testing strategies.
-          </p>
-        </div>
-
-        <div class="glass-card p-4 sm:p-5 rounded-2xl">
-          <h4 class="text-xs sm:text-sm font-bold text-white mb-1">How does Jito MEV protection work?</h4>
-          <p class="text-[11px] sm:text-xs text-gray-400 leading-relaxed">
-            Transactions are submitted directly to Jito Block Engines across 5 global regions as private bundles with a dynamic tip instruction, completely bypassing the public mempool to make sandwich attacks impossible.
-          </p>
-        </div>
-
-        <div class="glass-card p-4 sm:p-5 rounded-2xl">
-          <h4 class="text-xs sm:text-sm font-bold text-white mb-1">Which AI models are supported?</h4>
-          <p class="text-[11px] sm:text-xs text-gray-400 leading-relaxed">
-            The AI Brain supports GitHub Copilot (via local proxy at <code>http://localhost:4141</code>), Claude 3.5 Sonnet, Google Gemini 1.5, DeepSeek R1 (via local Ollama), OpenAI GPT-4o, and an offline built-in neural heuristics engine.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="border-t border-gray-800/80 bg-black/90 py-8 sm:py-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center space-x-3">
-        <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-purple-500 flex items-center justify-center text-white font-black text-xs sm:text-sm">
-          <i class="fa-solid fa-bolt"></i>
-        </div>
-        <span class="text-xs font-extrabold text-white tracking-wider">PUMP.FUN // QUANTUM TITAN v9.5</span>
-      </div>
+  <!-- FOOTER (INTERCONNECTED) -->
+  <footer class="border-t border-gray-800/80 bg-black/90 py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
       
-      <p class="text-[11px] sm:text-xs text-gray-500 text-center">
-        Distributed under the MIT License • Built with ❤️ for the Solana Trading Community
-      </p>
-
-      <div class="flex items-center space-x-4 text-gray-400 text-sm">
-        <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="hover:text-cyan-400 transition" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
-        <a href="https://solana.com" target="_blank" class="hover:text-purple-400 transition" aria-label="Solana"><i class="fa-solid fa-cube"></i></a>
-        <a href="https://pump.fun" target="_blank" class="hover:text-emerald-400 transition" aria-label="Pump.fun"><i class="fa-solid fa-rocket"></i></a>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-xs">
+        <div>
+          <h4 class="font-bold text-white uppercase mb-2">Core System</h4>
+          <ul class="space-y-1 text-gray-400">
+            <li><a href="index.html" class="hover:text-cyan-400 transition">Overview</a></li>
+            <li><a href="strategies.html" class="hover:text-cyan-400 transition">Trading Strategies</a></li>
+            <li><a href="mev-security.html" class="hover:text-cyan-400 transition">MEV Sandwich Guard</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-white uppercase mb-2">Quantitative</h4>
+          <ul class="space-y-1 text-gray-400">
+            <li><a href="ai-brain.html" class="hover:text-cyan-400 transition">AI Brain Matrix</a></li>
+            <li><a href="profit-vault.html" class="hover:text-cyan-400 transition">Cyclical Profit Vault</a></li>
+            <li><a href="docs.html" class="hover:text-cyan-400 transition">Telegram Controller</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-white uppercase mb-2">Developers</h4>
+          <ul class="space-y-1 text-gray-400">
+            <li><a href="docs.html" class="hover:text-cyan-400 transition">CLI Documentation</a></li>
+            <li><a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="hover:text-cyan-400 transition">GitHub Repository</a></li>
+            <li><a href="https://solana.com" target="_blank" class="hover:text-cyan-400 transition">Solana Network</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-white uppercase mb-2">Community</h4>
+          <ul class="space-y-1 text-gray-400">
+            <li><a href="https://pump.fun" target="_blank" class="hover:text-cyan-400 transition">Pump.fun Protocol</a></li>
+            <li><a href="https://jito.wtf" target="_blank" class="hover:text-cyan-400 transition">Jito Block Engine</a></li>
+          </ul>
+        </div>
       </div>
+
+      <div class="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-cyan-500 to-purple-500 flex items-center justify-center text-white font-black text-xs">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <span class="text-xs font-extrabold text-white tracking-wider">PUMP.FUN // QUANTUM TITAN v9.5</span>
+        </div>
+        <p class="text-[11px] text-gray-500 text-center">
+          Distributed under the MIT License • Built with ❤️ for the Solana Trading Community
+        </p>
+        <div class="flex items-center space-x-4 text-gray-400 text-sm">
+          <a href="https://github.com/yashab-cyber/pumpfun" target="_blank" class="hover:text-cyan-400 transition" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+        </div>
+      </div>
+
     </div>
   </footer>
 
-  <!-- SCRIPT LOGIC -->
+  <!-- SCRIPT LOGIC (REAL-TIME DYNAMIC TERMINAL SIMULATOR) -->
   <script>
     // Mobile Drawer Toggle
     function toggleMobileMenu() {
@@ -612,21 +538,57 @@
       }
     }
 
-    // 1. Interactive Equity Chart Simulator
+    // Dynamic Simulator State
+    let activeStrategy = 'SNIPER';
+    let balanceSol = 1.8450;
+    let baseBankroll = 1.0000;
+    let vaultedSol = 1.5000;
+    let vaultCycles = 3;
+    let wins = 15;
+    let losses = 6;
     let simChart = null;
+
+    let positions = [
+      { symbol: 'NEURAL', name: 'NeuralAI', invested: 0.010, pnlPct: 58.4, pnlSol: 0.0058, ai: 92, status: 'PROFIT' },
+      { symbol: 'SOLGPT', name: 'SolGPT', invested: 0.012, pnlPct: 22.1, pnlSol: 0.0026, ai: 86, status: 'PROFIT' }
+    ];
+
+    const tokenPool = [
+      { sym: 'QUANT', name: 'QuantumSol', cat: 'TECH_AI' },
+      { sym: 'CYBER', name: 'CyberDoge', cat: 'VIRAL_MEME' },
+      { sym: 'DEEP', name: 'DeepSeekPump', cat: 'TECH_AI' },
+      { sym: 'HYPER', name: 'HyperSolana', cat: 'GAMING' },
+      { sym: 'ALPHA', name: 'AlphaNode', cat: 'TECH_AI' },
+      { sym: 'PEPEAI', name: 'PepeArtificial', cat: 'VIRAL_MEME' },
+      { sym: 'KOTH', name: 'RaydiumKing', cat: 'DEPIN' }
+    ];
+
     function initSimChart() {
       const ctx = document.getElementById('simChart').getContext('2d');
+      const now = new Date();
+      const labels = [];
+      const data = [];
+      
+      let cur = 1.000;
+      for (let i = 8; i >= 0; i--) {
+        const d = new Date(now.getTime() - i * 30000);
+        labels.push(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        cur += (Math.random() * 0.12 - 0.02);
+        data.push(Number(cur.toFixed(4)));
+      }
+      balanceSol = data[data.length - 1];
+
       simChart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: ['07:00', '07:01', '07:02', '07:03', '07:04', '07:05', '07:06', '07:07', '07:08'],
+          labels: labels,
           datasets: [{
             label: 'Bankroll (SOL)',
-            data: [1.000, 1.045, 1.032, 1.150, 1.280, 1.260, 1.490, 1.620, 1.845],
+            data: data,
             borderColor: '#06b6d4',
-            backgroundColor: 'rgba(6, 182, 212, 0.12)',
+            backgroundColor: 'rgba(6, 182, 212, 0.15)',
             borderWidth: 2,
-            tension: 0.3,
+            tension: 0.35,
             fill: true,
             pointRadius: window.innerWidth < 640 ? 2 : 4,
             pointBackgroundColor: '#06b6d4'
@@ -635,6 +597,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: { duration: 600 },
           plugins: { legend: { display: false } },
           scales: {
             x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: window.innerWidth < 640 ? 9 : 11 } } },
@@ -644,8 +607,66 @@
       });
     }
 
-    // 2. Strategy Switcher
+    function renderPositionsUI() {
+      const container = document.getElementById('simPositionsList');
+      const badge = document.getElementById('posBadge');
+      if (!container) return;
+
+      badge.textContent = `${positions.length} Active`;
+      if (positions.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-gray-500 text-xs">Scanning bonding curve stream for entries...</div>`;
+        return;
+      }
+
+      container.innerHTML = positions.map((p, idx) => {
+        const isGreen = p.pnlPct >= 0;
+        const color = isGreen ? 'text-emerald-400' : 'text-red-400';
+        const border = isGreen ? 'border-emerald-500/30' : 'border-red-500/30';
+        return `
+          <div class="p-2 sm:p-2.5 rounded-lg bg-gray-950/80 border ${border} flex items-center justify-between gap-2 transition transform hover:scale-[1.01]">
+            <div class="truncate">
+              <div class="font-bold text-[11px] sm:text-xs text-white truncate">${p.symbol} <span class="text-gray-400 text-[10px]">(${p.name})</span></div>
+              <div class="text-[9px] sm:text-[10px] text-gray-400">Inv: ${p.invested.toFixed(3)} SOL | AI: ${p.ai}%</div>
+            </div>
+            <div class="text-right flex-shrink-0 flex items-center gap-2">
+              <div>
+                <div class="text-[11px] sm:text-xs font-black ${color}">${isGreen ? '+' : ''}${p.pnlPct.toFixed(1)}%</div>
+                <div class="text-[9px] sm:text-[10px] ${color}">${isGreen ? '+' : ''}${p.pnlSol.toFixed(4)} SOL</div>
+              </div>
+              <button onclick="manualSellPosition(${idx})" class="px-2 py-1 bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white rounded text-[9px] font-bold transition">Sell</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addConsoleLog(msg, colorClass) {
+      const consoleEl = document.getElementById('simConsole');
+      if (!consoleEl) return;
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = `${colorClass} whitespace-nowrap`;
+      div.textContent = `[${time}] ${msg}`;
+      consoleEl.prepend(div);
+      if (consoleEl.children.length > 25) {
+        consoleEl.removeChild(consoleEl.lastChild);
+      }
+    }
+
+    function manualSellPosition(idx) {
+      if (positions[idx]) {
+        const p = positions[idx];
+        balanceSol += (p.invested + p.pnlSol);
+        if (p.pnlSol >= 0) wins++; else losses++;
+        addConsoleLog(`🚨 [Manual Action] Liquidated position $${p.symbol} -> Net PnL: ${p.pnlSol >= 0 ? '+' : ''}${p.pnlSol.toFixed(4)} SOL`, 'text-amber-400');
+        positions.splice(idx, 1);
+        renderPositionsUI();
+        updateTopStats();
+      }
+    }
+
     function setSimStrategy(strat) {
+      activeStrategy = strat;
       ['SNIPER', 'MIGRATION_KOTH', 'MOMENTUM_SCALP'].forEach(s => {
         const btn = document.getElementById('btn-' + s);
         if (s === strat) {
@@ -654,59 +675,99 @@
           btn.className = 'px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold text-gray-400 hover:text-white whitespace-nowrap';
         }
       });
+      addConsoleLog(`⚙️ [Strategy Coordinator] Active regime changed to: ${strat}`, 'text-cyan-400');
     }
 
-    // 3. Env Config Generator
-    function generateEnv() {
-      const mode = document.getElementById('cfgMode').value;
-      const size = document.getElementById('cfgTradeSize').value || '0.01';
-      const ai = document.getElementById('cfgAi').value;
-      const tp1 = document.getElementById('cfgTp1').value || '50';
-      const sl = document.getElementById('cfgSl').value || '-20';
-      const vault = document.getElementById('cfgVault').value || '0.50';
-
-      const content = 
-`# Solana Network Configuration
-RPC_URL=https://api.mainnet-beta.solana.com
-SOLANA_PRIVATE_KEY=your_base58_private_key_here
-
-# Trading Mode & Active Strategy
-TRADING_MODE=${mode}
-ACTIVE_STRATEGY=SNIPER
-
-# Risk & Bankroll Management
-SOL_PER_TRADE=${size}
-TAKE_PROFIT_1_PERCENT=${tp1}
-TAKE_PROFIT_2_PERCENT=100
-STOP_LOSS_PERCENT=${sl}
-TRAILING_STOP_TRIGGER_PERCENT=30
-SLIPPAGE_PERCENT=15
-PRIORITY_FEE_SOL=0.001
-
-# Profit Vault Milestones ($1 to $100 Sweep)
-BASE_BANKROLL_SOL=0.01
-PROFIT_VAULT_THRESHOLD_SOL=${vault}
-VAULT_DESTINATION_ADDRESS=your_cold_storage_address_here
-
-# AI Brain Configuration
-AI_PROVIDER=${ai}
-COPILOT_ENDPOINT=http://localhost:4141/v1/chat/completions`;
-
-      document.getElementById('envOutput').textContent = content;
+    function updateTopStats() {
+      const gain = balanceSol - baseBankroll;
+      document.getElementById('simBalance').textContent = balanceSol.toFixed(4) + ' SOL';
+      document.getElementById('simSessionGain').textContent = (gain >= 0 ? '+' : '') + gain.toFixed(4) + ' SOL (' + ((gain/baseBankroll)*100).toFixed(1) + '%)';
+      document.getElementById('simVault').textContent = '🔒 ' + vaultedSol.toFixed(4) + ' SOL';
+      document.getElementById('simVaultCycles').textContent = `${vaultCycles} Cycles Completed (~$${(vaultedSol * 200).toFixed(0)})`;
+      
+      const total = wins + losses;
+      const wr = total > 0 ? (wins / total) * 100 : 70;
+      document.getElementById('simWinRate').textContent = wr.toFixed(1) + '%';
+      document.getElementById('simTradeCount').textContent = `${wins}W / ${losses}L (${total} Trades)`;
     }
 
-    function copyEnv() {
-      const text = document.getElementById('envOutput').textContent;
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById('copyBtnText');
-        btn.textContent = 'Copied!';
-        setTimeout(() => { btn.textContent = 'Copy Config'; }, 2000);
+    // Dynamic Live Simulation Ticker
+    function runSimulationStep() {
+      // 1. Mutate open positions
+      positions.forEach(p => {
+        const delta = (Math.random() * 8.0 - 2.5);
+        p.pnlPct += delta;
+        p.pnlSol = (p.invested * p.pnlPct) / 100;
       });
+
+      // 2. Check for Take Profit / Exits
+      for (let i = positions.length - 1; i >= 0; i--) {
+        const p = positions[i];
+        if (p.pnlPct >= 65.0) {
+          // Take profit
+          balanceSol += (p.invested + p.pnlSol);
+          wins++;
+          addConsoleLog(`🎯 [Risk Manager] TP Triggered (+${p.pnlPct.toFixed(1)}%) on $${p.symbol}! Locked +${p.pnlSol.toFixed(4)} SOL gain.`, 'text-emerald-400');
+          positions.splice(i, 1);
+          
+          // Vault check
+          if (balanceSol - baseBankroll >= 0.50) {
+            vaultedSol += 0.50;
+            vaultCycles++;
+            balanceSol -= 0.50;
+            addConsoleLog(`🏦 [Profit Vault] Milestone Achieved! Locked +0.50 SOL into cold storage. Starting Cycle #${vaultCycles+1}`, 'text-amber-400');
+          }
+        } else if (p.pnlPct <= -18.0) {
+          // Stop loss
+          balanceSol += (p.invested + p.pnlSol);
+          losses++;
+          addConsoleLog(`🛑 [Risk Manager] Defensive Stop Loss (-18%) on $${p.symbol}. Capital preserved.`, 'text-rose-400');
+          positions.splice(i, 1);
+        }
+      }
+
+      // 3. Occasionally buy a new token if capacity exists
+      if (positions.length < 3 && Math.random() < 0.45) {
+        const t = tokenPool[Math.floor(Math.random() * tokenPool.length)];
+        const aiScore = Math.floor(Math.random() * 12) + 86;
+        const inv = 0.010 + Math.random() * 0.005;
+        
+        positions.push({
+          symbol: t.sym,
+          name: t.name,
+          invested: Number(inv.toFixed(4)),
+          pnlPct: (Math.random() * 4.0 - 1.0),
+          pnlSol: 0,
+          ai: aiScore,
+          status: 'OPEN'
+        });
+
+        addConsoleLog(`🚀 [PumpPortal] Ingested $${t.sym} (${t.name}) | Dev: ${(Math.random()*1.5+0.5).toFixed(2)} SOL | Jito Bundle Confirmed (142ms)`, 'text-cyan-400');
+      }
+
+      // 4. Update Chart
+      if (simChart) {
+        const now = new Date();
+        simChart.data.labels.push(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        simChart.data.datasets[0].data.push(Number(balanceSol.toFixed(4)));
+        if (simChart.data.labels.length > 10) {
+          simChart.data.labels.shift();
+          simChart.data.datasets[0].data.shift();
+        }
+        simChart.update();
+      }
+
+      renderPositionsUI();
+      updateTopStats();
     }
 
     window.onload = () => {
       initSimChart();
-      generateEnv();
+      renderPositionsUI();
+      updateTopStats();
+      addConsoleLog('⚡ [Quantum Engine] Connected to Solana WebSocket. Jito Block Engines Active.', 'text-emerald-400');
+      addConsoleLog('🧠 [AI Brain Matrix] Copilot local model loaded at http://localhost:4141.', 'text-purple-400');
+      setInterval(runSimulationStep, 2600);
     };
 
     window.onresize = () => {
