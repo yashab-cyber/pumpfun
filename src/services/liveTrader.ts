@@ -70,7 +70,7 @@ export class LiveTrader {
       return false;
     }
     const currentBalance = await this.solanaService.getBalance();
-    const minRequired = this.config.solPerTrade + (this.config.priorityFeeLamports / 1e9) + 0.005;
+    const minRequired = this.config.solPerTrade + (this.config.priorityFeeLamports / 1e9) + 0.005; // 0.005 SOL cushion for gas & rent
     return currentBalance >= minRequired;
   }
 
@@ -87,7 +87,7 @@ export class LiveTrader {
 
     this.isExecutingTrade = true;
     try {
-      console.log(chalk.yellow(`[LiveTrader] Sending BUY tx for ${token.symbol} (${token.mint}) [${strategyName}]...`));
+      console.log(chalk.yellow(`[LiveTrader] Sending on-chain BUY for ${token.symbol} (${token.mint}) [${strategyName}]...`));
       const res = await this.pumpPortal.executeLiveTrade({
         action: 'buy',
         mint: token.mint,
@@ -165,12 +165,12 @@ export class LiveTrader {
 
     position.status = 'CLOSING';
     try {
-      console.log(chalk.yellow(`[LiveTrader] Sending SELL tx for ${position.symbol} (${signal.reason})...`));
+      console.log(chalk.yellow(`[LiveTrader] Sending on-chain SELL for ${position.symbol} (${signal.reason})...`));
 
       const res = await this.pumpPortal.executeLiveTrade({
         action: 'sell',
         mint: position.mint,
-        amount: signal.sellRatio === 1.0 ? 100 : Math.floor(signal.sellRatio * 100),
+        amount: signal.sellRatio >= 1.0 ? 100 : Math.floor(signal.sellRatio * 100),
         denominatedInSol: false,
         slippagePercent: this.config.slippagePercent,
         priorityFeeSol: this.config.priorityFeeLamports / 1e9
@@ -182,12 +182,13 @@ export class LiveTrader {
         return;
       }
 
-      const portionInvested = position.investedSol * signal.sellRatio;
+      const clampedRatio = Math.max(0.01, Math.min(1.0, signal.sellRatio));
+      const portionInvested = position.investedSol * clampedRatio;
       const fillPriceSol = position.currentPriceSol * (1 - (this.config.slippagePercent / 100));
-      const tokensToSell = position.tokenAmount * signal.sellRatio;
+      const tokensToSell = position.tokenAmount * clampedRatio;
       const solReturned = tokensToSell * fillPriceSol;
 
-      if (signal.sellRatio >= 1.0) {
+      if (clampedRatio >= 1.0) {
         position.status = 'CLOSED';
         position.closeReason = signal.reason;
         this.pumpPortal.unsubscribeTokenTrades([position.mint]);
@@ -196,8 +197,8 @@ export class LiveTrader {
         }
       } else {
         position.status = 'OPEN';
-        position.tokenAmount *= (1 - signal.sellRatio);
-        position.investedSol *= (1 - signal.sellRatio);
+        position.tokenAmount *= (1 - clampedRatio);
+        position.investedSol *= (1 - clampedRatio);
         if (this.sqlite) {
           await this.sqlite.saveActivePosition(position);
         }
