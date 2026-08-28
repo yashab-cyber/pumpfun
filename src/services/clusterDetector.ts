@@ -14,12 +14,22 @@ export class ClusterDetector {
   private launchTracking: Map<string, { launchTime: number; buyers: Set<string>; amounts: number[]; totalSol: number }> = new Map();
 
   public registerLaunch(mint: string): void {
+    const now = Date.now();
     this.launchTracking.set(mint, {
-      launchTime: Date.now(),
+      launchTime: now,
       buyers: new Set(),
       amounts: [],
       totalSol: 0
     });
+
+    // Automatic pruning of dead launches older than 60s
+    if (this.launchTracking.size > 1000) {
+      for (const [k, v] of this.launchTracking.entries()) {
+        if (now - v.launchTime > 60000) {
+          this.launchTracking.delete(k);
+        }
+      }
+    }
   }
 
   public trackEarlyTrade(trade: TradeEvent): ClusterReport | null {
