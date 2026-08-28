@@ -43,6 +43,13 @@ export class SQLiteMemory {
       driver: sqlite3.Database
     });
 
+    // Enable high-performance concurrency pragmas
+    await this.db.exec(`
+      PRAGMA journal_mode = WAL;
+      PRAGMA synchronous = NORMAL;
+      PRAGMA cache_size = -64000;
+    `);
+
     // Create persistent tables
     await this.db.exec(`
       CREATE TABLE IF NOT EXISTS trades (
@@ -130,7 +137,7 @@ export class SQLiteMemory {
       );
     `);
 
-    console.log(chalk.green(`[SQLite Memory] 🧠 Persistent Database online at ${this.dbPath}`));
+    console.log(chalk.green(`[SQLite Memory] 🧠 Persistent Database online (WAL Mode) at ${this.dbPath}`));
   }
 
   // --- Active Position Crash Recovery & Persistence ---
@@ -178,7 +185,7 @@ export class SQLiteMemory {
 
   public async loadActivePositions(): Promise<Position[]> {
     if (!this.db) return [];
-    const rows = await this.db.all(`SELECT * FROM active_positions WHERE status = 'OPEN'`);
+    const rows = await this.db.all<any[]>(`SELECT * FROM active_positions WHERE status = 'OPEN'`);
     return rows.map(r => ({
       mint: r.mint,
       symbol: r.symbol,
@@ -196,7 +203,7 @@ export class SQLiteMemory {
       pnlSol: r.pnl_sol,
       tp1Triggered: Boolean(r.tp1_triggered),
       tp2Triggered: Boolean(r.tp2_triggered),
-      status: 'OPEN',
+      status: r.status,
       closeReason: r.close_reason,
       txSignature: r.tx_signature,
       bondingCurveProgress: r.bonding_curve_progress,
@@ -205,52 +212,7 @@ export class SQLiteMemory {
     }));
   }
 
-  // --- Key-Value State Persistence ---
-
-  public async saveState(key: string, value: any): Promise<void> {
-    if (!this.db) return;
-    await this.db.run(
-      `INSERT OR REPLACE INTO agent_state (key, value) VALUES (?, ?)`,
-      [key, JSON.stringify(value)]
-    );
-  }
-
-  public async loadState<T>(key: string, defaultValue: T): Promise<T> {
-    if (!this.db) return defaultValue;
-    const row = await this.db.get(`SELECT value FROM agent_state WHERE key = ?`, [key]);
-    if (!row || !row.value) return defaultValue;
-    try {
-      return JSON.parse(row.value) as T;
-    } catch {
-      return defaultValue;
-    }
-  }
-
-  // --- Vault Cycles & Profit Bankroll Storage ---
-
-  public async recordVaultCycle(cycleNumber: number, amountVaultedSol: number, totalVaultedSol: number, txSignature?: string): Promise<void> {
-    if (!this.db) return;
-    await this.db.run(
-      `INSERT INTO vault_cycles (cycle_number, amount_vaulted_sol, total_vaulted_sol, tx_signature, timestamp)
-       VALUES (?, ?, ?, ?, ?)`,
-      [cycleNumber, amountVaultedSol, totalVaultedSol, txSignature || null, Date.now()]
-    );
-  }
-
-  public async getVaultCycles(): Promise<VaultCycle[]> {
-    if (!this.db) return [];
-    const rows = await this.db.all(`SELECT * FROM vault_cycles ORDER BY timestamp DESC`);
-    return rows.map(r => ({
-      id: r.id,
-      cycleNumber: r.cycle_number,
-      amountVaultedSol: r.amount_vaulted_sol,
-      totalVaultedSol: r.total_vaulted_sol,
-      timestamp: r.timestamp,
-      txSignature: r.tx_signature
-    }));
-  }
-
-  // --- Trade History & Dev Memory ---
+  // --- Trade Recording & Pattern Learning ---
 
   public async recordTrade(trade: DBTrade): Promise<void> {
     if (!this.db) return;
@@ -281,123 +243,9 @@ export class SQLiteMemory {
     );
   }
 
-  public async updateDevReputation(devPubkey: string, isProfitable: boolean, isRug: boolean): Promise<void> {
-    if (!this.db || !devPubkey) return;
-    const now = Date.now();
-    const existing = await this.db.get(`SELECT * FROM dev_memory WHERE dev_pubkey = ?`, [devPubkey]);
-
-    if (existing) {
-      await this.db.run(
-        `UPDATE dev_memory SET
-          total_tokens_created = total_tokens_created + 1,
-          profitable_tokens = profitable_tokens + ?,
-          rugged_tokens = rugged_tokens + ?,
-          last_seen = ?
-        WHERE dev_pubkey = ?`,
-        [isProfitable ? 1 : 0, isRug ? 1 : 0, now, devPubkey]
-      );
-    } else {
-      await this.db.run(
-        `INSERT INTO dev_memory (dev_pubkey, total_tokens_created, profitable_tokens, rugged_tokens, last_seen)
-         VALUES (?, 1, ?, ?, ?)`,
-        [devPubkey, isProfitable ? 1 : 0, isRug ? 1 : 0, now]
-      );
-    }
-  }
-
-  public async getDevReputation(devPubkey: string): Promise<DevReputation> {
-    if (!this.db || !devPubkey) {
-      return {
-        devPubkey,
-        totalTokensCreated: 0,
-        profitableTokens: 0,
-        ruggedTokens: 0,
-        rugRate: 0,
-        reputationScore: 50,
-        isBlacklisted: false
-      };
-    }
-
-    const row = await this.db.get(`SELECT * FROM dev_memory WHERE dev_pubkey = ?`, [devPubkey]);
-    if (!row) {
-      return {
-        devPubkey,
-        totalTokensCreated: 0,
-        profitableTokens: 0,
-        ruggedTokens: 0,
-        rugRate: 0,
-        reputationScore: 50,
-        isBlacklisted: false
-      };
-    }
-
-    const total = row.total_tokens_created || 1;
-    const rugs = row.rugged_tokens || 0;
-    const profits = row.profitable_tokens || 0;
-    const rugRate = rugs / total;
-
-    let score = 50 + (profits * 15) - (rugs * 25);
-    score = Math.max(0, Math.min(100, score));
-
-    return {
-      devPubkey,
-      totalTokensCreated: total,
-      profitableTokens: profits,
-      ruggedTokens: rugs,
-      rugRate,
-      reputationScore: score,
-      isBlacklisted: rugs >= 3 && rugRate >= 0.75
-    };
-  }
-
-  public async recordAIDecision(
-    mint: string,
-    symbol: string,
-    decision: string,
-    confidence: number,
-    reasoning: string,
-    tags: string[] = []
-  ): Promise<void> {
-    if (!this.db) return;
-    await this.db.run(
-      `INSERT INTO ai_decisions (mint, symbol, decision, confidence, reasoning, tags, timestamp)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [mint, symbol, decision, confidence, reasoning, tags.join(','), Date.now()]
-    );
-  }
-
-  public async getRecentSuccessfulPatterns(limit: number = 5): Promise<{ tag: string; wins: number; pnl: number }[]> {
-    if (!this.db) return [];
-    try {
-      const rows = await this.db.all(
-        `SELECT tags, pnl_sol FROM trades WHERE pnl_sol > 0 ORDER BY timestamp DESC LIMIT ?`,
-        [limit * 2]
-      );
-      const tagStats: Record<string, { wins: number; pnl: number }> = {};
-      for (const r of rows) {
-        if (r.tags) {
-          const tags = r.tags.split(',');
-          for (const t of tags) {
-            const clean = t.trim();
-            if (!clean) continue;
-            if (!tagStats[clean]) tagStats[clean] = { wins: 0, pnl: 0 };
-            tagStats[clean].wins++;
-            tagStats[clean].pnl += r.pnl_sol;
-          }
-        }
-      }
-      return Object.entries(tagStats)
-        .map(([tag, stat]) => ({ tag, wins: stat.wins, pnl: stat.pnl }))
-        .sort((a, b) => b.pnl - a.pnl)
-        .slice(0, limit);
-    } catch {
-      return [];
-    }
-  }
-
   public async getAllTrades(): Promise<DBTrade[]> {
     if (!this.db) return [];
-    const rows = await this.db.all(`SELECT * FROM trades ORDER BY timestamp DESC`);
+    const rows = await this.db.all<any[]>(`SELECT * FROM trades ORDER BY timestamp DESC`);
     return rows.map(r => ({
       id: r.id,
       mint: r.mint,
@@ -416,5 +264,183 @@ export class SQLiteMemory {
       holdSeconds: r.hold_seconds,
       timestamp: r.timestamp
     }));
+  }
+
+  public async getRecentSuccessfulPatterns(limit: number = 5): Promise<{ tag: string; pnl: number }[]> {
+    if (!this.db) return [];
+    const rows = await this.db.all<any[]>(
+      `SELECT t.reason, t.pnl_sol, d.tags
+       FROM trades t
+       LEFT JOIN ai_decisions d ON t.mint = d.mint
+       WHERE t.pnl_sol > 0
+       ORDER BY t.timestamp DESC LIMIT ?`,
+      [limit]
+    );
+    const patterns: { tag: string; pnl: number }[] = [];
+    for (const r of rows) {
+      if (r.tags) {
+        for (const tag of r.tags.split(',')) {
+          patterns.push({ tag: tag.trim(), pnl: r.pnl_sol });
+        }
+      }
+    }
+    return patterns;
+  }
+
+  // --- Developer Reputation & Rug Memory ---
+
+  public async updateDevReputation(devPubkey: string, isWin: boolean, isRug: boolean): Promise<void> {
+    if (!this.db || !devPubkey) return;
+
+    const existing = await this.db.get<any>(
+      `SELECT * FROM dev_memory WHERE dev_pubkey = ?`,
+      [devPubkey]
+    );
+
+    const now = Date.now();
+    if (existing) {
+      const total = existing.total_tokens_created + 1;
+      const profitable = existing.profitable_tokens + (isWin ? 1 : 0);
+      const rugged = existing.rugged_tokens + (isRug ? 1 : 0);
+
+      await this.db.run(
+        `UPDATE dev_memory SET
+          total_tokens_created = ?,
+          profitable_tokens = ?,
+          rugged_tokens = ?,
+          last_seen = ?
+        WHERE dev_pubkey = ?`,
+        [total, profitable, rugged, now, devPubkey]
+      );
+    } else {
+      await this.db.run(
+        `INSERT INTO dev_memory (
+          dev_pubkey, total_tokens_created, profitable_tokens, rugged_tokens, last_seen
+        ) VALUES (?, 1, ?, ?, ?)`,
+        [devPubkey, isWin ? 1 : 0, isRug ? 1 : 0, now]
+      );
+    }
+  }
+
+  public async getDevReputation(devPubkey: string): Promise<DevReputation> {
+    if (!this.db || !devPubkey) {
+      return {
+        devPubkey: devPubkey || 'UNKNOWN',
+        totalTokensCreated: 0,
+        profitableTokens: 0,
+        ruggedTokens: 0,
+        rugRate: 0,
+        reputationScore: 50,
+        isBlacklisted: false
+      };
+    }
+
+    const row = await this.db.get<any>(
+      `SELECT * FROM dev_memory WHERE dev_pubkey = ?`,
+      [devPubkey]
+    );
+
+    if (!row) {
+      return {
+        devPubkey,
+        totalTokensCreated: 0,
+        profitableTokens: 0,
+        ruggedTokens: 0,
+        rugRate: 0,
+        reputationScore: 50,
+        isBlacklisted: false
+      };
+    }
+
+    const total = row.total_tokens_created || 1;
+    const rugged = row.rugged_tokens || 0;
+    const profitable = row.profitable_tokens || 0;
+    const rugRate = rugged / total;
+
+    // Reputation Score: 0 to 100
+    let score = 50 + (profitable * 15) - (rugged * 30);
+    score = Math.min(100, Math.max(0, score));
+
+    const isBlacklisted = rugRate > 0.60 && total >= 2;
+
+    return {
+      devPubkey,
+      totalTokensCreated: total,
+      profitableTokens: profitable,
+      ruggedTokens: rugged,
+      rugRate,
+      reputationScore: score,
+      isBlacklisted
+    };
+  }
+
+  // --- AI Decision Logging ---
+
+  public async recordAIDecision(
+    mint: string,
+    symbol: string,
+    decision: 'BUY' | 'SKIP',
+    confidence: number,
+    reasoning: string,
+    tags: string[] = []
+  ): Promise<void> {
+    if (!this.db) return;
+    await this.db.run(
+      `INSERT INTO ai_decisions (mint, symbol, decision, confidence, reasoning, tags, timestamp)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [mint, symbol, decision, confidence, reasoning, tags.join(','), Date.now()]
+    );
+  }
+
+  // --- Profit Vault Cycle Records ---
+
+  public async recordVaultCycle(
+    cycleNumber: number,
+    amountVaultedSol: number,
+    totalVaultedSol: number,
+    txSignature?: string
+  ): Promise<void> {
+    if (!this.db) return;
+    await this.db.run(
+      `INSERT INTO vault_cycles (cycle_number, amount_vaulted_sol, total_vaulted_sol, tx_signature, timestamp)
+       VALUES (?, ?, ?, ?, ?)`,
+      [cycleNumber, amountVaultedSol, totalVaultedSol, txSignature || null, Date.now()]
+    );
+  }
+
+  public async getVaultCycles(): Promise<VaultCycle[]> {
+    if (!this.db) return [];
+    const rows = await this.db.all<any[]>(`SELECT * FROM vault_cycles ORDER BY cycle_number DESC`);
+    return rows.map(r => ({
+      id: r.id,
+      cycleNumber: r.cycle_number,
+      amountVaultedSol: r.amount_vaulted_sol,
+      totalVaultedSol: r.total_vaulted_sol,
+      txSignature: r.tx_signature,
+      timestamp: r.timestamp
+    }));
+  }
+
+  // --- Generic Key-Value State Store ---
+
+  public async saveState<T>(key: string, value: T): Promise<void> {
+    if (!this.db) return;
+    await this.db.run(
+      `INSERT OR REPLACE INTO agent_state (key, value) VALUES (?, ?)`,
+      [key, JSON.stringify(value)]
+    );
+  }
+
+  public async loadState<T>(key: string, defaultValue: T): Promise<T> {
+    if (!this.db) return defaultValue;
+    const row = await this.db.get<any>(`SELECT value FROM agent_state WHERE key = ?`, [key]);
+    if (row && row.value) {
+      try {
+        return JSON.parse(row.value) as T;
+      } catch {
+        return defaultValue;
+      }
+    }
+    return defaultValue;
   }
 }

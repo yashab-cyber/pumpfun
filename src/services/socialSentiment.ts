@@ -5,13 +5,16 @@ export interface SentimentAnalysis {
   sentimentTier: 'HYPER_VIRAL' | 'MODERATE' | 'NEUTRAL' | 'LOW_EFFORT';
   detectedKeywords: string[];
   hasCommunityChannels: boolean;
+  hasVerifiedTwitterUrl: boolean;
+  hasVerifiedTelegramUrl: boolean;
   reachMultiplier: number;
 }
 
 export class SocialSentimentAnalyzer {
   private static readonly VIRAL_TRIGGER_WORDS = [
     'pepe', 'doge', 'wojak', 'chad', 'trump', 'elon', 'cult',
-    'giga', 'shib', 'inu', 'moon', 'sol', 'ai', 'agent', 'brainrot'
+    'giga', 'shib', 'inu', 'moon', 'sol', 'ai', 'agent', 'brainrot',
+    'pnut', 'chill', 'moodeng', 'fart', 'goat', 'deepseek', 'terminal'
   ];
 
   public analyzeToken(token: TokenCreationEvent): SentimentAnalysis {
@@ -25,11 +28,33 @@ export class SocialSentimentAnalyzer {
     }
 
     let score = 25; // Base score
-    const hasSocials = Boolean(token.twitter || token.telegram || token.website);
 
-    if (hasSocials) score += 30;
-    if (token.twitter && token.telegram) score += 15;
-    score += Math.min(30, detected.length * 10);
+    // Syntactic URL verification
+    const twitterRaw = (token.twitter || '').trim();
+    const telegramRaw = (token.telegram || '').trim();
+    const websiteRaw = (token.website || '').trim();
+
+    const hasVerifiedTwitterUrl = Boolean(
+      twitterRaw.length >= 8 &&
+      (twitterRaw.includes('twitter.com/') || twitterRaw.includes('x.com/')) &&
+      !twitterRaw.endsWith('/x.com') && !twitterRaw.endsWith('/twitter.com')
+    );
+
+    const hasVerifiedTelegramUrl = Boolean(
+      telegramRaw.length >= 6 &&
+      (telegramRaw.includes('t.me/') || telegramRaw.includes('telegram.me/')) &&
+      !telegramRaw.endsWith('/t.me')
+    );
+
+    const hasWebsite = Boolean(websiteRaw.length >= 8 && websiteRaw.startsWith('http'));
+    const hasCommunityChannels = hasVerifiedTwitterUrl || hasVerifiedTelegramUrl || hasWebsite;
+
+    if (hasCommunityChannels) score += 25;
+    if (hasVerifiedTwitterUrl) score += 15;
+    if (hasVerifiedTelegramUrl) score += 15;
+    if (hasVerifiedTwitterUrl && hasVerifiedTelegramUrl) score += 10;
+    
+    score += Math.min(30, detected.length * 8);
 
     let tier: 'HYPER_VIRAL' | 'MODERATE' | 'NEUTRAL' | 'LOW_EFFORT' = 'NEUTRAL';
     let reachMultiplier = 1.0;
@@ -49,7 +74,9 @@ export class SocialSentimentAnalyzer {
       viralityScore: Math.min(100, score),
       sentimentTier: tier,
       detectedKeywords: detected,
-      hasCommunityChannels: hasSocials,
+      hasCommunityChannels,
+      hasVerifiedTwitterUrl,
+      hasVerifiedTelegramUrl,
       reachMultiplier
     };
   }
