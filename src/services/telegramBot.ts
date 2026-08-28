@@ -25,7 +25,7 @@ export class TelegramBot {
   constructor() {
     this.botToken = process.env.TELEGRAM_BOT_TOKEN;
     this.chatId = process.env.TELEGRAM_CHAT_ID;
-    this.isEnabled = Boolean(this.botToken && this.chatId && this.botToken.length > 5);
+    this.isEnabled = Boolean(this.botToken && this.botToken.trim().length > 5);
 
     if (this.isEnabled) {
       console.log(chalk.green.bold('[Telegram Bot] 📱 Interactive Telegram Controller online!'));
@@ -162,7 +162,10 @@ export class TelegramBot {
     if (!message || !message.text) return;
 
     const senderChatId = String(message.chat.id);
-    if (this.chatId && senderChatId !== this.chatId) {
+    if (!this.chatId || this.chatId.trim().length === 0) {
+      this.chatId = senderChatId;
+      console.log(chalk.green(`[Telegram Bot] Connected and linked to Telegram Chat ID: ${this.chatId}`));
+    } else if (senderChatId !== this.chatId) {
       // Ignore unauthorized users
       return;
     }
