@@ -104,7 +104,11 @@ export class LiveTrader {
 
       let estimatedPriceSol = 0.00000003;
       if (token.vSolInBondingCurve && token.vTokensInBondingCurve && token.vTokensInBondingCurve > 0) {
-        estimatedPriceSol = (token.vSolInBondingCurve / 1e9) / (token.vTokensInBondingCurve / 1e6);
+        const realVSol = token.vSolInBondingCurve > 1e6 ? token.vSolInBondingCurve / 1e9 : token.vSolInBondingCurve;
+        const realVTokens = token.vTokensInBondingCurve > 1e9 ? token.vTokensInBondingCurve / 1e6 : token.vTokensInBondingCurve;
+        if (realVTokens > 0) {
+          estimatedPriceSol = realVSol / realVTokens;
+        }
       }
       const fillPriceSol = estimatedPriceSol * (1 + (this.config.slippagePercent / 100));
       const tokenAmount = this.config.solPerTrade / fillPriceSol;
@@ -281,6 +285,7 @@ export class LiveTrader {
     const currentBalance = await this.solanaService.getBalance();
     const totalVaulted = this.profitVault ? this.profitVault.getTotalVaulted() : 0;
     const vaultCycles = this.profitVault ? this.profitVault.getCycleCount() : 0;
+    const cumulativeRealizedPnl = (currentBalance + totalVaulted) - this.startingBalanceSol;
 
     if (this.journal) {
       const a = this.journal.getAnalytics();
@@ -292,7 +297,7 @@ export class LiveTrader {
         totalTrades: a.totalTrades,
         winningTrades: a.winningTrades,
         losingTrades: a.losingTrades,
-        realizedPnlSol: currentBalance - this.startingBalanceSol,
+        realizedPnlSol: cumulativeRealizedPnl,
         totalVolumeSol: a.totalTrades * this.config.solPerTrade,
         winRate: a.winRate,
         profitFactor: a.profitFactor,
@@ -309,7 +314,7 @@ export class LiveTrader {
       totalTrades: 0,
       winningTrades: 0,
       losingTrades: 0,
-      realizedPnlSol: currentBalance - this.startingBalanceSol,
+      realizedPnlSol: cumulativeRealizedPnl,
       totalVolumeSol: 0,
       winRate: 0,
       profitFactor: 0,
