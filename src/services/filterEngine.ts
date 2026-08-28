@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { AgentConfig, TokenCreationEvent } from '../types';
 
 export interface FilterResult {
@@ -31,15 +30,18 @@ export class FilterEngine {
     }
 
     // 4. Blacklist check on name and symbol
-    const textToCheck = `${token.name} ${token.symbol}`.toLowerCase();
-    for (const badWord of this.config.blacklistedWords) {
-      if (textToCheck.includes(badWord)) {
-        return { passed: false, reason: `Contains blacklisted keyword: "${badWord}"` };
+    const textToCheck = `${token.name || ''} ${token.symbol || ''}`.toLowerCase();
+    if (this.config.blacklistedWords && this.config.blacklistedWords.length > 0) {
+      for (const badWord of this.config.blacklistedWords) {
+        if (badWord && textToCheck.includes(badWord.toLowerCase())) {
+          return { passed: false, reason: `Contains blacklisted keyword: "${badWord}"` };
+        }
       }
     }
 
     // 5. Dev Initial Buy Filter
-    const initialBuySol = token.initialBuy > 1000000 ? token.initialBuy / 1e9 : token.initialBuy;
+    const rawInitialBuy = (token.initialBuy && !isNaN(token.initialBuy) && token.initialBuy > 0) ? token.initialBuy : 0;
+    const initialBuySol = rawInitialBuy > 1000000 ? rawInitialBuy / 1e9 : rawInitialBuy;
 
     if (initialBuySol < this.config.minDevInitialBuySol) {
       return {
